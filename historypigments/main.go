@@ -137,11 +137,13 @@ var pigments = []Pigment{
 }
 
 func main() {
-    templatesDir := filepath.Join(".", "templates")
+    // Resolve templates and assets directories with fallbacks so running from repo root or historypigments/ works
+    templatesDir, assetsDir := resolveDataDirs()
+
     tmpl := template.Must(template.ParseGlob(filepath.Join(templatesDir, "*.html")))
 
     mux := http.NewServeMux()
-    mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
+    mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(assetsDir))))
     mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
         if r.URL.Path != "/" {
             http.NotFound(w, r)
@@ -259,4 +261,36 @@ func sortedPigments(items []Pigment) []Pigment {
     out := append([]Pigment(nil), items...)
     sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
     return out
+}
+
+// resolveDataDirs tries a few candidate locations for templates/ and assets/ so the
+// server can be started from the repo root (go run ./historypigments) or from
+// inside the historypigments/ directory. It falls back to the naive relative
+// paths if nothing else is found.
+func resolveDataDirs() (templatesDir, assetsDir string) {
+    candidatesTemplates := []string{"./templates", "./historypigments/templates"}
+    candidatesAssets := []string{"./assets", "./historypigments/assets"}
+
+    for _, c := range candidatesTemplates {
+        if fi, err := os.Stat(c); err == nil && fi.IsDir() {
+            templatesDir = c
+            break
+        }
+    }
+    if templatesDir == "" {
+        templatesDir = "./templates"
+    }
+
+    for _, c := range candidatesAssets {
+        if fi, err := os.Stat(c); err == nil && fi.IsDir() {
+            assetsDir = c
+            break
+        }
+    }
+    if assetsDir == "" {
+        assetsDir = "./assets"
+    }
+
+    fmt.Printf("Using templates dir: %s, assets dir: %s\n", templatesDir, assetsDir)
+    return
 }
