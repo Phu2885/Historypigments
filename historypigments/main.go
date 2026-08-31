@@ -42,6 +42,38 @@ func (p Pigment) VideoURL() string {
     return minioBaseURL + "/" + p.VideoKey
 }
 
+// CSSColor attempts to return a valid CSS color for UI use (hex or rgb).
+// If Pigment.Color already looks like a color literal (starts with '#' or 'rgb'),
+// return it as-is. Otherwise map common Russian color names to hex codes.
+func (p Pigment) CSSColor() string {
+    v := strings.TrimSpace(p.Color)
+    if v == "" {
+        return "#777"
+    }
+    lower := strings.ToLower(v)
+    if strings.HasPrefix(v, "#") || strings.HasPrefix(lower, "rgb") {
+        return v
+    }
+    switch lower {
+    case "красный":
+        return "#b21b1b"
+    case "жёлтый", "желтый":
+        return "#c19a2b"
+    case "зёлёный", "зелёный", "зеленый", "зелёный":
+        return "#2e8b57"
+    case "синий":
+        return "#21517a"
+    case "коричневый":
+        return "#6b4c3b"
+    default:
+        // fallback — return the original value (may be a named color in English) or a neutral grey
+        if len(v) > 0 {
+            return v
+        }
+        return "#777"
+    }
+}
+
 var pigments = []Pigment{
     {
         ID:          1,

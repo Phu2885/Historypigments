@@ -37,8 +37,8 @@
 
         <section class="pigments-grid" aria-label="Список пигментов">
           {{ range .Pigments }}
-          <article class="pigment-card" style="--pigment-color: {{ .Color }};">
-            <div class="card-color-swatch" style="background-color: {{ .Color }};">
+          <article class="pigment-card" style="--pigment-color: {{ .CSSColor }};">
+            <div class="card-color-swatch" style="background-color: {{ .CSSColor }};">
               {{ if .ImageURL }}
                 <img class="gallery-thumb-img" src="{{ .ImageURL }}" alt="{{ .Name }}" />
               {{ else }}
