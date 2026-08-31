@@ -1,0 +1,81 @@
+{{ define "tiles.html" }}
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Плитка — Исторические пигменты</title>
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="site-header">
+        <div class="container header-container">
+          <div>
+            <a class="logo-link" href="/"><span class="logo-text">История и Культура №23</span></a>
+            <div class="header__label" style="font-weight:700;margin-top:6px;color:var(--text-secondary);">Каталог</div>
+          </div>
+
+          <nav class="main-nav" aria-label="Главная навигация">
+            <a class="nav-link" href="/lenta?id=1">Лента</a>
+            <a class="nav-link" href="/add">Добавление</a>
+            <a class="nav-link" href="/tiles">Плитка</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="container page page--tiles">
+        <form class="controls-bar" method="get" action="/tiles">
+          <div class="filter__field">
+            <label class="filter__label" for="wavelength">Длина волны</label>
+            <input id="wavelength" class="input" type="number" name="wavelength" value="{{ .Filter }}" />
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:12px;">
+            <button class="btn btn-primary filter__button" type="submit">Найти</button>
+          </div>
+        </form>
+
+        <section class="pigments-grid" aria-label="Список пигментов">
+          {{ range .Pigments }}
+          <article class="pigment-card" style="--pigment-color: {{ .Color }};">
+            <div class="card-color-swatch" style="background-color: {{ .Color }};">
+              {{ if .ImageURL }}
+                <img class="gallery-thumb-img" src="{{ .ImageURL }}" alt="{{ .Name }}" />
+              {{ else }}
+                <div class="swatch-overlay">{{ .Name }}</div>
+              {{ end }}
+            </div>
+
+            <div class="card-content">
+              <div class="card-category-badge">{{ if eq .Status "опубликован" }}Опубликован{{ else }}Черновик{{ end }}</div>
+              <h3 class="card-title">{{ .Name }}</h3>
+              <p class="card-desc-preview">{{ .Description }}</p>
+
+              <div class="card-footer">
+                <div>{{ .Wavelength }} nm</div>
+                <div class="pigment-card__likes"><span class="pigment-card__heart">♡</span><span>{{ .Likes }}</span></div>
+              </div>
+            </div>
+          </article>
+          {{ end }}
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Навигация">
+        <a class="bottom-nav__item {{ if eq .Active "lenta" }}active{{ end }}" href="/lenta?id=1">
+          <span class="bottom-nav__icon">◧</span>
+          <span>Лента</span>
+        </a>
+        <a class="bottom-nav__item {{ if eq .Active "add" }}active{{ end }}" href="/add">
+          <span class="bottom-nav__icon">＋</span>
+          <span>Добавление</span>
+        </a>
+        <a class="bottom-nav__item {{ if eq .Active "tiles" }}active{{ end }}" href="/tiles">
+          <span class="bottom-nav__icon">▦</span>
+          <span>Плитка</span>
+        </a>
+      </nav>
+    </div>
+  </body>
+</html>
+{{ end }}

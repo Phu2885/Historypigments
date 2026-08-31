@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Плитка — Исторические пигменты</title>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="header">
+        <div class="header__label">Каталог</div>
+        <h1 class="header__title">Исторические пигменты</h1>
+      </header>
+
+      <main class="page page--tiles">
+        <form class="filter" method="get" action="tiles.html">
+          <div class="filter__field">
+            <label class="filter__label" for="wavelength">Длина волны</label>
+            <input id="wavelength" class="input" type="number" name="wavelength" value="610" />
+          </div>
+          <button class="btn filter__button" type="submit">Найти</button>
+        </form>
+
+        <section class="card-grid" aria-label="Список пигментов">
+          <article class="pigment-card">
+            <div class="pigment-card__image pigment-card__image--cinnabar"></div>
+            <div class="pigment-card__body">
+              <h3 class="pigment-card__name">Киноварь</h3>
+              <div class="pigment-card__meta">610 nm</div>
+              <div class="pigment-card__likes">
+                <span class="pigment-card__heart">♡</span>
+                <span>124</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="pigment-card">
+            <div class="pigment-card__image pigment-card__image--ochre"></div>
+            <div class="pigment-card__body">
+              <h3 class="pigment-card__name">Жёлтая охра</h3>
+              <div class="pigment-card__meta">580 nm</div>
+              <div class="pigment-card__likes">
+                <span class="pigment-card__heart">♡</span>
+                <span>92</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="pigment-card">
+            <div class="pigment-card__image pigment-card__image--malachite"></div>
+            <div class="pigment-card__body">
+              <h3 class="pigment-card__name">Малахит</h3>
+              <div class="pigment-card__meta">530 nm</div>
+              <div class="pigment-card__likes">
+                <span class="pigment-card__heart">♡</span>
+                <span>71</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="pigment-card">
+            <div class="pigment-card__image pigment-card__image--lapis"></div>
+            <div class="pigment-card__body">
+              <h3 class="pigment-card__name">Лазурит</h3>
+              <div class="pigment-card__meta">470 nm</div>
+              <div class="pigment-card__likes">
+                <span class="pigment-card__heart">♡</span>
+                <span>154</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="pigment-card">
+            <div class="pigment-card__image pigment-card__image--ultramarine"></div>
+            <div class="pigment-card__body">
+              <h3 class="pigment-card__name">Ультрамарин</h3>
+              <div class="pigment-card__meta">450 nm</div>
+              <div class="pigment-card__likes">
+                <span class="pigment-card__heart">♡</span>
+                <span>236</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="pigment-card">
+            <div class="pigment-card__image pigment-card__image--umber"></div>
+            <div class="pigment-card__body">
+              <h3 class="pigment-card__name">Умбра</h3>
+              <div class="pigment-card__meta">490 nm</div>
+              <div class="pigment-card__likes">
+                <span class="pigment-card__heart">♡</span>
+                <span>61</span>
+              </div>
+            </div>
+          </article>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Навигация">
+        <a class="bottom-nav__item" href="index.html">
+          <span class="bottom-nav__icon">◧</span>
+          <span>Лента</span>
+        </a>
+        <a class="bottom-nav__item" href="add.html">
+          <span class="bottom-nav__icon">＋</span>
+          <span>Добавление</span>
+        </a>
+        <a class="bottom-nav__item active" href="tiles.html">
+          <span class="bottom-nav__icon">▦</span>
+          <span>Плитка</span>
+        </a>
+      </nav>
+    </div>
+  </body>
+</html>

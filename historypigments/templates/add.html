@@ -1,0 +1,92 @@
+{{ define "add.html" }}
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Добавление — Исторические пигменты</title>
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="site-header">
+        <div class="container header-container">
+          <div>
+            <a class="logo-link" href="/"><span class="logo-text">История и Культура №23</span></a>
+            <div class="header__label" style="font-weight:700;margin-top:6px;color:var(--text-secondary);">Черновик</div>
+          </div>
+
+          <nav class="main-nav" aria-label="Главная навигация">
+            <a class="nav-link" href="/lenta?id=1">Лента</a>
+            <a class="nav-link" href="/add">Добавление</a>
+            <a class="nav-link" href="/tiles">Плитка</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="container page page--form">
+        <form class="form" method="get" action="/add">
+          <section class="form-block">
+            <div class="form-block__title">Изображение</div>
+            <div class="media-box" aria-label="Добавить изображение">+ Добавить изображение</div>
+          </section>
+
+          <section class="form-block">
+            <div class="form-block__title">Видео</div>
+            <div class="media-box media-box--video" aria-label="Добавить видео">+ Добавить видео</div>
+          </section>
+
+          <section class="form-block">
+            <div class="field">
+              <label class="label" for="name">Название пигмента</label>
+              <input id="name" class="input" type="text" value="{{ .Pigment.Name }}" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="description">Описание</label>
+              <textarea id="description" class="textarea" rows="3">{{ .Pigment.Description }}</textarea>
+            </div>
+          </section>
+
+          <section class="form-block">
+            <div class="field">
+              <label class="label" for="color">Цвет</label>
+              <input id="color" class="input" type="text" value="{{ .Pigment.Color }}" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="wavelength">Длина волны</label>
+              <input id="wavelength" class="input" type="text" value="{{ .Pigment.Wavelength }} nm" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="reflection">Отражение</label>
+              <input id="reflection" class="input" type="text" value="{{ .Pigment.Reflection }}" />
+            </div>
+
+            <div class="field">
+              <label class="label" for="absorption">Поглощение</label>
+              <input id="absorption" class="input" type="text" value="{{ .Pigment.Absorption }}" />
+            </div>
+          </section>
+        </form>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Навигация">
+        <a class="bottom-nav__item {{ if eq .Active "lenta" }}active{{ end }}" href="/lenta?id=1">
+          <span class="bottom-nav__icon">◧</span>
+          <span>Лента</span>
+        </a>
+        <a class="bottom-nav__item {{ if eq .Active "add" }}active{{ end }}" href="/add">
+          <span class="bottom-nav__icon">＋</span>
+          <span>Добавление</span>
+        </a>
+        <a class="bottom-nav__item {{ if eq .Active "tiles" }}active{{ end }}" href="/tiles">
+          <span class="bottom-nav__icon">▦</span>
+          <span>Плитка</span>
+        </a>
+      </nav>
+    </div>
+  </body>
+</html>
+{{ end }}
