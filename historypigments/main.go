@@ -18,68 +18,39 @@ type Pigment struct {
 	Name        string
 	Description string
 	Color       string
-	Wavelength  float64
+	Wavelength  int     // Changed to int for easier filtering as per requirement
 	Reflection  float64
 	Absorption  float64
 	ImageKey    string
 	VideoKey    string
 	Status      string
-	Likes       int
+	UserLikes   []int // Collection of user IDs who liked this
+}
+
+// LikesCount calculates likes from the collection (Requirement: "вычисляется по коллекции")
+func (p Pigment) LikesCount() int {
+	return len(p.UserLikes)
 }
 
 func (p Pigment) ImageURL() string {
-	// If no ImageKey provided, fall back to local placeholder so templates always have a valid image
 	if strings.TrimSpace(p.ImageKey) == "" {
-		return "/assets/local.jpg"
+		return "/assets/images/placeholder.jpg"
 	}
 	return minioBaseURL + "/" + p.ImageKey
 }
 
 func (p Pigment) VideoURL() string {
-	// Return empty when no video key to avoid rendering broken <video> tags
 	if strings.TrimSpace(p.VideoKey) == "" {
 		return ""
 	}
 	return minioBaseURL + "/" + p.VideoKey
 }
 
-// CSSColor attempts to return a valid CSS color for UI use (hex or rgb).
-// If Pigment.Color already looks like a color literal (starts with '#' or 'rgb'),
-// return it as-is. Otherwise map common Russian color names to hex codes.
-func (p Pigment) CSSColor() string {
-	v := strings.TrimSpace(p.Color)
-	if v == "" {
-		return "#777"
-	}
-	lower := strings.ToLower(v)
-	if strings.HasPrefix(v, "#") || strings.HasPrefix(lower, "rgb") {
-		return v
-	}
-	switch lower {
-	case "красный":
-		return "#b21b1b"
-	case "жёлтый", "желтый":
-		return "#c19a2b"
-	case "зёлёный", "зелёный", "зеленый", "зелёный":
-		return "#2e8b57"
-	case "синий":
-		return "#21517a"
-	case "коричневый":
-		return "#6b4c3b"
-	default:
-		// fallback — return the original value (may be a named color in English) or a neutral grey
-		if len(v) > 0 {
-			return v
-		}
-		return "#777"
-	}
-}
-
 var pigments = []Pigment{
 	{
 		ID:          1,
 		Name:        "Киноварь",
-		Description: "Исторический красный пигмент",
+		Description: "Исторический красный пигмент, использовавшийся с древности.",
 		Color:       "Красный",
 		Wavelength:  610,
 		Reflection:  0.72,
@@ -87,12 +58,12 @@ var pigments = []Pigment{
 		ImageKey:    "cinnabar.jpg",
 		VideoKey:    "cinnabar.mp4",
 		Status:      "опубликован",
-		Likes:       124,
+		UserLikes:   []int{1, 2, 3, 4, 5},
 	},
 	{
 		ID:          2,
 		Name:        "Жёлтая охра",
-		Description: "Жёлтый исторический пигмент",
+		Description: "Природный земляной пигмент, смесь гидратов оксида железа с глиной.",
 		Color:       "Жёлтый",
 		Wavelength:  580,
 		Reflection:  0.68,
@@ -100,12 +71,12 @@ var pigments = []Pigment{
 		ImageKey:    "yellow-ochre.jpg",
 		VideoKey:    "yellow-ochre.mp4",
 		Status:      "опубликован",
-		Likes:       92,
+		UserLikes:   []int{6, 7},
 	},
 	{
 		ID:          3,
 		Name:        "Малахит",
-		Description: "Зелёный исторический пигмент",
+		Description: "Зелёный пигмент, получаемый из размолотого минерала малахита.",
 		Color:       "Зелёный",
 		Wavelength:  530,
 		Reflection:  0.64,
@@ -113,12 +84,12 @@ var pigments = []Pigment{
 		ImageKey:    "malachite.jpg",
 		VideoKey:    "malachite.mp4",
 		Status:      "опубликован",
-		Likes:       71,
+		UserLikes:   []int{8, 9, 10},
 	},
 	{
 		ID:          4,
 		Name:        "Лазурит",
-		Description: "Синий исторический пигмент",
+		Description: "Синий пигмент исключительной чистоты và яркости.",
 		Color:       "Синий",
 		Wavelength:  470,
 		Reflection:  0.62,
@@ -126,12 +97,12 @@ var pigments = []Pigment{
 		ImageKey:    "lapis-lazuli.jpg",
 		VideoKey:    "lapis-lazuli.mp4",
 		Status:      "опубликован",
-		Likes:       154,
+		UserLikes:   []int{11},
 	},
 	{
 		ID:          5,
 		Name:        "Ультрамарин",
-		Description: "Синий и фиолетовый пигмент",
+		Description: "Ярко-синий пигмент, исторически ценившийся на вес золота.",
 		Color:       "Синий",
 		Wavelength:  450,
 		Reflection:  0.60,
@@ -139,12 +110,12 @@ var pigments = []Pigment{
 		ImageKey:    "ultramarine.jpg",
 		VideoKey:    "ultramarine.mp4",
 		Status:      "опубликован",
-		Likes:       236,
+		UserLikes:   []int{12, 13, 14, 15, 16},
 	},
 	{
 		ID:          6,
 		Name:        "Умбра",
-		Description: "Коричневый исторический пигмент",
+		Description: "Коричневый земляной пигмент из оксидов железа и марганца.",
 		Color:       "Коричневый",
 		Wavelength:  490,
 		Reflection:  0.58,
@@ -152,178 +123,183 @@ var pigments = []Pigment{
 		ImageKey:    "umber.jpg",
 		VideoKey:    "umber.mp4",
 		Status:      "опубликован",
-		Likes:       61,
+		UserLikes:   []int{17},
 	},
 	{
 		ID:          7,
-		Name:        "Киноварь черновик",
-		Description: "Черновик для добавления пигмента",
-		Color:       "Красный",
-		Wavelength:  610,
-		Reflection:  0.72,
-		Absorption:  0.28,
-		ImageKey:    "cinnabar-draft.jpg",
-		VideoKey:    "cinnabar-draft.mp4",
+		Name:        "Новый образец (Черновик)",
+		Description: "Данные для нового исследования фрагмента живописи.",
+		Color:       "Не определен",
+		Wavelength:  0,
+		Reflection:  0.0,
+		Absorption:  0.0,
+		ImageKey:    "draft.jpg",
+		VideoKey:    "",
 		Status:      "черновик",
-		Likes:       0,
+		UserLikes:   []int{},
 	},
 }
 
 func main() {
-	// Resolve templates and assets directories with fallbacks so running from repo root or historypigments/ works
 	templatesDir, assetsDir := resolveDataDirs()
 
 	tmpl := template.Must(template.ParseGlob(filepath.Join(templatesDir, "*.html")))
 
 	mux := http.NewServeMux()
+
+	// Serve assets
 	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(assetsDir))))
+
+	// Root redirect
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 			return
 		}
-		http.Redirect(w, r, "/lenta?id=1", http.StatusFound)
+		http.Redirect(w, r, "/reconstruction-pigments", http.StatusFound)
 	})
-	mux.HandleFunc("/lenta", func(w http.ResponseWriter, r *http.Request) {
+
+	// GET 1: Feed by ID (Reconstruction Analysis)
+	mux.HandleFunc("/reconstruction-pigments", func(w http.ResponseWriter, r *http.Request) {
 		pigment, ok := findPigment(r)
 		if !ok {
-			pigment = pigments[0]
+			for _, p := range pigments {
+				if p.Status == "опубликован" {
+					pigment = p
+					break
+				}
+			}
 		}
 		data := struct {
 			Pigment Pigment
 			Active  string
 		}{Pigment: pigment, Active: "lenta"}
-		if err := tmpl.ExecuteTemplate(w, "lenta.html", data); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	})
-	mux.HandleFunc("/add", func(w http.ResponseWriter, r *http.Request) {
-		pigment := getDraft()
-		data := struct {
-			Pigment Pigment
-			Active  string
-		}{Pigment: pigment, Active: "add"}
-		if err := tmpl.ExecuteTemplate(w, "add.html", data); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	})
-	mux.HandleFunc("/tiles", func(w http.ResponseWriter, r *http.Request) {
-		parsed := r.URL.Query().Get("wavelength")
-		filtered := filterPigmentsByWavelength(parsed)
-		data := struct {
-			Pigments []Pigment
-			Filter   string
-			Active   string
-		}{
-			Pigments: filtered,
-			Filter:   parsed,
-			Active:   "tiles",
-		}
-		if err := tmpl.ExecuteTemplate(w, "tiles.html", data); err != nil {
+		if err := tmpl.ExecuteTemplate(w, "reconstruction-pigments.html", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
 
-	fmt.Println("MinIO base:", minioBaseURL)
-	fmt.Println("Serving on http://localhost:8080")
+	// GET 2: Draft (Analysis Request / Заявка)
+	mux.HandleFunc("/pigment-analysis-request", func(w http.ResponseWriter, r *http.Request) {
+		var draft Pigment
+		for _, p := range pigments {
+			if p.Status == "черновик" {
+				draft = p
+				break
+			}
+		}
+		data := struct {
+			Pigment Pigment
+			Active  string
+		}{Pigment: draft, Active: "add"}
+		if err := tmpl.ExecuteTemplate(w, "pigment-analysis-request.html", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+
+	// GET 3: All Cards (Pigments Database / База данных)
+	mux.HandleFunc("/pigments-database", func(w http.ResponseWriter, r *http.Request) {
+		filterStr := r.URL.Query().Get("filter")
+		filtered := filterPigments(filterStr)
+
+		// Собираем список уникальных длин волн для фильтра
+		wavelengths := make(map[int]bool)
+		for _, p := range pigments {
+			if p.Status == "опубликован" {
+				wavelengths[p.Wavelength] = true
+			}
+		}
+		var waveList []int
+		for w := range wavelengths {
+			waveList = append(waveList, w)
+		}
+		sort.Ints(waveList)
+
+		data := struct {
+			Pigments    []Pigment
+			Filter      string
+			Active      string
+			Wavelengths []int
+		}{
+			Pigments:    filtered,
+			Filter:      filterStr,
+			Active:      "tiles",
+			Wavelengths: waveList,
+		}
+		if err := tmpl.ExecuteTemplate(w, "pigments-database.html", data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+
+	fmt.Printf("Alchemy of Art History serving on http://localhost:8080\n")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		panic(err)
 	}
 }
 
-func findPigment(r *http.Request) (Pigment, bool) {
-	idRaw := strings.TrimSpace(r.URL.Query().Get("id"))
-	if idRaw == "" {
-		return pigments[0], true
+func render(w http.ResponseWriter, tmpl *template.Template, name string, data interface{}) {
+	if err := tmpl.ExecuteTemplate(w, name, data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	id, err := strconv.Atoi(idRaw)
-	if err != nil {
+}
+
+func findPigment(r *http.Request) (Pigment, bool) {
+	idRaw := r.URL.Query().Get("id")
+	if idRaw == "" {
 		return Pigment{}, false
 	}
-	if strings.TrimSpace(r.URL.Query().Get("next")) == "true" {
-		for i, p := range pigments {
-			if p.ID == id {
-				if i+1 < len(pigments) {
-					return pigments[i+1], true
-				}
-				return pigments[0], true
-			}
+	id, _ := strconv.Atoi(idRaw)
+
+	next := r.URL.Query().Get("next") == "true"
+
+	var published []Pigment
+	for _, p := range pigments {
+		if p.Status == "опубликован" {
+			published = append(published, p)
 		}
 	}
-	for _, p := range pigments {
+
+	for i, p := range published {
 		if p.ID == id {
+			if next {
+				return published[(i+1)%len(published)], true
+			}
 			return p, true
 		}
 	}
 	return Pigment{}, false
 }
 
-func getDraft() Pigment {
-	for _, p := range pigments {
-		if p.Status == "черновик" {
-			return p
-		}
-	}
-	return pigments[0]
-}
-
-func filterPigmentsByWavelength(value string) []Pigment {
-	q := strings.TrimSpace(value)
-	out := make([]Pigment, 0)
+func filterPigments(filter string) []Pigment {
+	var out []Pigment
 	for _, p := range pigments {
 		if p.Status != "опубликован" {
 			continue
 		}
-		if q == "" {
+		if filter == "" {
 			out = append(out, p)
 			continue
 		}
-		filter, err := strconv.Atoi(q)
-		if err != nil {
-			out = append(out, p)
-			continue
-		}
-		if int(p.Wavelength) == filter {
+
+		// Filter by Wavelength (numeric field as per requirement)
+		fVal, err := strconv.Atoi(filter)
+		if err == nil && p.Wavelength == fVal {
 			out = append(out, p)
 		}
 	}
-	return sortedPigments(out)
-}
 
-func sortedPigments(items []Pigment) []Pigment {
-	out := append([]Pigment(nil), items...)
 	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
 	return out
 }
 
-// resolveDataDirs tries a few candidate locations for templates/ and assets/ so the
-// server can be started from the repo root (go run ./historypigments) or from
-// inside the historypigments/ directory. It falls back to the naive relative
-// paths if nothing else is found.
 func resolveDataDirs() (templatesDir, assetsDir string) {
-	candidatesTemplates := []string{"./templates", "./historypigments/templates"}
-	candidatesAssets := []string{"./templates/assets", "./historypigments/templates/assets", "./assets", "./historypigments/assets"}
+	templatesDir = "./templates"
+	assetsDir = "./templates/assets"
 
-	for _, c := range candidatesTemplates {
-		if fi, err := os.Stat(c); err == nil && fi.IsDir() {
-			templatesDir = c
-			break
-		}
+	// Check if we are running from root or subdir
+	if _, err := os.Stat(templatesDir); os.IsNotExist(err) {
+		templatesDir = "./historypigments/templates"
+		assetsDir = "./historypigments/templates/assets"
 	}
-	if templatesDir == "" {
-		templatesDir = "./templates"
-	}
-
-	for _, c := range candidatesAssets {
-		if fi, err := os.Stat(c); err == nil && fi.IsDir() {
-			assetsDir = c
-			break
-		}
-	}
-	if assetsDir == "" {
-		assetsDir = "./assets"
-	}
-
-	fmt.Printf("Using templates dir: %s, assets dir: %s\n", templatesDir, assetsDir)
 	return
 }
