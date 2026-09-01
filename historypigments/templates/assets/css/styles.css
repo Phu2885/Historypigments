@@ -1,0 +1,387 @@
+/*
+   "Alchemy of Art History" & "Vibes" UI
+   Mobile-first Portrait Mode (TikTok/TikTok-like layout)
+*/
+
+:root {
+  --bg-color: #090A0C;
+  --surface-color: #111318;
+  --accent-gold: #D4AF37;
+  --text-white: #F2F0E8;
+  --text-gray: #9297A1;
+  --border-color: rgba(255, 255, 255, 0.1);
+
+  --font-serif: 'Cormorant Garamond', serif;
+  --font-sans: 'Inter', sans-serif;
+
+  --nav-height: 60px; /* Giảm chiều cao xuống giống TikTok */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-white);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Cấu trúc Flexbox: Menu ở cuối trang, không đè lên nội dung */
+.app-container {
+  width: 100%;
+  max-width: 450px;
+  margin: 0 auto;
+  height: 100vh;
+  display: flex;
+  flex-direction: column; /* Xếp dọc: Main ở trên, Nav ở dưới */
+  overflow: hidden;
+  position: relative;
+  background-color: var(--bg-color);
+}
+
+main {
+  flex: 1; /* Chiếm phần còn lại của màn hình */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+main::-webkit-scrollbar {
+  display: none;
+}
+
+/* Bottom Navigation - Điểm kết thúc của trang, không đè lên video */
+.bottom-nav {
+  width: 100%;
+  height: var(--nav-height);
+  background-color: var(--surface-color); /* Quay lại màu cũ */
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--text-gray); /* Quay lại màu xám cũ */
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-decoration: none;
+  gap: 2px;
+}
+
+.nav-item.active {
+  color: var(--accent-gold); /* Màu vàng active cũ */
+}
+
+.nav-icon {
+  font-size: 20px;
+  margin-bottom: 0;
+}
+
+/* Bố cục từng trang */
+.feed-page {
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.tiles-page, .add-page {
+  padding: 20px;
+}
+
+.video-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 30px 100px 30px 20px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.95) 60%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.pigment-info {
+  max-width: 100%;
+}
+
+/* Bố cục Xem thêm / Thu gọn */
+.description-container {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.desc-checkbox {
+  display: none; /* Ẩn cái ô vuông màu xanh đi */
+}
+
+.pigment-desc {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-white);
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Hiện 2 dòng */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.desc-label {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--accent-gold);
+  cursor: pointer;
+  margin-top: 4px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.desc-label::before {
+  content: attr(data-more);
+}
+
+/* Khi checkbox được check -> Mở rộng nội dung */
+.desc-checkbox:checked + .pigment-desc {
+  display: block;
+  -webkit-line-clamp: none;
+  overflow: visible;
+}
+
+.desc-checkbox:checked ~ .desc-label::before {
+  content: attr(data-less);
+}
+
+.pigment-info h1 {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  color: var(--accent-gold);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.meta-grid {
+  display: flex;
+  gap: 20px;
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  padding-top: 15px;
+  margin-top: 5px;
+}
+
+.meta-item .label {
+  display: block;
+  font-size: 9px;
+  color: var(--text-gray);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.meta-item .value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-white);
+}
+
+.feed-actions {
+  position: absolute;
+  right: 10px;
+  bottom: 80px; /* Vị trí tương đối so với đáy của vùng nội dung */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+  z-index: 3;
+  width: 80px;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-white);
+  transition: transform 0.2s;
+  text-decoration: none;
+}
+
+.action-btn:active {
+  transform: scale(0.9);
+}
+
+.action-icon {
+  font-size: 36px;
+  margin-bottom: 2px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  line-height: 1;
+}
+
+.action-text, .action-btn span:last-child {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-white);
+}
+
+.next-action .action-icon,
+.next-action .action-text {
+  color: var(--accent-gold); /* Dùng màu vàng cho nút Tiếp theo */
+}
+
+.next-btn {
+  background: var(--accent-gold);
+  color: var(--bg-color);
+  padding: 10px 15px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+/* Tiles Page */
+.tiles-page {
+  padding: 20px;
+}
+
+.search-bar {
+  margin-bottom: 20px;
+}
+
+.search-bar form {
+  display: flex;
+  gap: 10px;
+}
+
+.search-input {
+  flex: 1;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-white);
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.search-btn {
+  background: var(--accent-gold);
+  border: none;
+  padding: 0 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.card {
+  background: var(--surface-color);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.card-img {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+}
+
+.card-content {
+  padding: 10px;
+}
+
+.card-title {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  color: var(--accent-gold);
+  margin-bottom: 5px;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-gray);
+}
+
+/* Add Page */
+.add-page {
+  padding: 20px;
+}
+
+.section-title {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  color: var(--accent-gold);
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-gray);
+  margin-bottom: 5px;
+}
+
+.form-input, .form-textarea {
+  width: 100%;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-white);
+  padding: 12px;
+  border-radius: 5px;
+}
+
+.media-preview {
+  width: 100%;
+  height: 200px;
+  background: var(--surface-color);
+  border: 1px dashed var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.media-preview img, .media-preview video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Utilities */
+.u-mt-10 { margin-top: 10px; }

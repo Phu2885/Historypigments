@@ -1,0 +1,64 @@
+{{ define "pigments-database.html" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог пигментов — Плитка</title>
+    <link rel="stylesheet" href="/assets/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <main class="tiles-page">
+            <h1 class="section-title">Каталог пигментов</h1>
+
+            <div class="search-bar">
+                <form action="/pigments-database" method="get">
+                    <select name="filter" class="search-input">
+                        <option value="">Все длины волн</option>
+                        {{ $currentFilter := .Filter }}
+                        {{ range .Wavelengths }}
+                        <option value="{{ . }}" {{ if eq (printf "%d" .) $currentFilter }}selected{{ end }}>
+                            {{ . }} нм
+                        </option>
+                        {{ end }}
+                    </select>
+                    <button type="submit" class="search-btn">Найти</button>
+                </form>
+            </div>
+
+            <section class="tiles-grid">
+                {{ range .Pigments }}
+                <a href="/reconstruction-pigments?id={{ .ID }}" class="card">
+                    <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="card-img">
+                    <div class="card-content">
+                        <h3 class="card-title">{{ .Name }}</h3>
+                        <div class="card-footer">
+                            <span>{{ .Wavelength }} нм</span>
+                            <span>❤ {{ .LikesCount }}</span>
+                        </div>
+                    </div>
+                </a>
+                {{ end }}
+            </section>
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="/reconstruction-pigments" class="nav-item {{ if eq .Active "lenta" }}active{{ end }}">
+                <span class="nav-icon">◧</span>
+                <span>Лента</span>
+            </a>
+            <a href="/pigment-analysis-request" class="nav-item {{ if eq .Active "add" }}active{{ end }}">
+                <span class="nav-icon">＋</span>
+                <span>Добавить</span>
+            </a>
+            <a href="/pigments-database" class="nav-item {{ if eq .Active "tiles" }}active{{ end }}">
+                <span class="nav-icon">▦</span>
+                <span>Плитка</span>
+            </a>
+        </nav>
+    </div>
+</body>
+</html>
+{{ end }}
