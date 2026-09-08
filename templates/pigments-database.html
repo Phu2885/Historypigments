@@ -27,7 +27,7 @@
 
             <section class="tiles-grid">
                 {{ range .Pigments }}
-                <a href="/reconstruction-pigments?id={{ .ID }}" class="card">
+                <a href="/pigments-database-reconstruction?id={{ .ID }}" class="card">
                     <img src="{{ .ImageURL }}" alt="{{ .Name }}" class="card-img">
                     <div class="card-content">
                         <h3 class="card-title">{{ .Name }}</h3>
@@ -42,11 +42,11 @@
         </main>
 
         <nav class="bottom-nav">
-            <a href="/reconstruction-pigments" class="nav-item {{ if eq .Active "lenta" }}active{{ end }}">
+            <a href="/pigments-database-reconstruction" class="nav-item {{ if eq .Active "lenta" }}active{{ end }}">
                 <span class="nav-icon">◧</span>
                 <span>Лента</span>
             </a>
-            <a href="/pigment-analysis-request" class="nav-item {{ if eq .Active "add" }}active{{ end }}">
+            <a href="/pigment-database-analysis" class="nav-item {{ if eq .Active "add" }}active{{ end }}">
                 <span class="nav-icon">＋</span>
                 <span>Добавить</span>
             </a>

@@ -142,10 +142,10 @@ func main() {
 			http.NotFound(w, r)
 			return
 		}
-		http.Redirect(w, r, "/reconstruction-pigments", http.StatusFound)
+		http.Redirect(w, r, "/pigments-database-reconstruction", http.StatusFound)
 	})
 
-	mux.HandleFunc("/reconstruction-pigments", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/pigments-database-reconstruction", func(w http.ResponseWriter, r *http.Request) {
 		pigment, ok := findPigment(r)
 		if !ok {
 			for _, p := range pigments {
@@ -159,12 +159,12 @@ func main() {
 			Pigment Pigment
 			Active  string
 		}{Pigment: pigment, Active: "lenta"}
-		if err := tmpl.ExecuteTemplate(w, "reconstruction-pigments.html", data); err != nil {
+		if err := tmpl.ExecuteTemplate(w, "pigments-database-reconstruction.html", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
 
-	mux.HandleFunc("/pigment-analysis-request", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/pigment-database-analysis", func(w http.ResponseWriter, r *http.Request) {
 		var draft Pigment
 		for _, p := range pigments {
 			if p.Status == "черновик" {
@@ -176,7 +176,7 @@ func main() {
 			Pigment Pigment
 			Active  string
 		}{Pigment: draft, Active: "add"}
-		if err := tmpl.ExecuteTemplate(w, "pigment-analysis-request.html", data); err != nil {
+		if err := tmpl.ExecuteTemplate(w, "pigment-database-analysis.html", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})

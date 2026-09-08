@@ -1,4 +1,4 @@
-{{ define "pigment-analysis-request.html" }}
+{{ define "pigment-database-analysis.html" }}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,7 +13,7 @@
         <main class="add-page">
             <h1 class="section-title">Новая запись (Черновик)</h1>
 
-            <form action="/pigment-analysis-request" method="get">
+            <form action="/pigment-database-analysis" method="get">
                 <div class="form-group">
                     <label>ПРЕДПРОСМОТР ИЗОБРАЖЕНИЯ</label>
                     <div class="media-preview">
@@ -71,11 +71,11 @@
         </main>
 
         <nav class="bottom-nav">
-            <a href="/reconstruction-pigments" class="nav-item {{ if eq .Active "lenta" }}active{{ end }}">
+            <a href="/pigments-database-reconstruction" class="nav-item {{ if eq .Active "lenta" }}active{{ end }}">
                 <span class="nav-icon">◧</span>
                 <span>Лента</span>
             </a>
-            <a href="/pigment-analysis-request" class="nav-item {{ if eq .Active "add" }}active{{ end }}">
+            <a href="/pigment-database-analysis" class="nav-item {{ if eq .Active "add" }}active{{ end }}">
                 <span class="nav-icon">＋</span>
                 <span>Добавить</span>
             </a>
