@@ -1,4 +1,0 @@
-Using templates dir: ./templates, assets dir: ./templates/assets
-MinIO base: http://localhost:9000/historypigments
-Serving on http://localhost:8080
-signal: killed

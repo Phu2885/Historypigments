@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -18,7 +17,6 @@ type Pigment struct {
 	Name        string
 	Description string
 	Color       string
-	Wavelength  int     // Changed to int for easier filtering as per requirement
 	Reflection  float64
 	Absorption  float64
 	ImageKey    string
@@ -27,7 +25,7 @@ type Pigment struct {
 	UserLikes   []int // Collection of user IDs who liked this
 }
 
-// LikesCount calculates likes from the collection (Requirement: "вычисляется по коллекции")
+// LikesCount calculates likes from the collection
 func (p Pigment) LikesCount() int {
 	return len(p.UserLikes)
 }
@@ -52,7 +50,6 @@ var pigments = []Pigment{
 		Name:        "Киноварь",
 		Description: "Исторический красный пигмент, использовавшийся с древности.",
 		Color:       "Красный",
-		Wavelength:  610,
 		Reflection:  0.72,
 		Absorption:  0.28,
 		ImageKey:    "cinnabar.jpg",
@@ -65,7 +62,6 @@ var pigments = []Pigment{
 		Name:        "Жёлтая охра",
 		Description: "Природный земляной пигмент, смесь гидратов оксида железа с глиной.",
 		Color:       "Жёлтый",
-		Wavelength:  580,
 		Reflection:  0.68,
 		Absorption:  0.32,
 		ImageKey:    "yellow-ochre.jpg",
@@ -78,7 +74,6 @@ var pigments = []Pigment{
 		Name:        "Малахит",
 		Description: "Зелёный пигмент, получаемый из размолотого минерала малахита.",
 		Color:       "Зелёный",
-		Wavelength:  530,
 		Reflection:  0.64,
 		Absorption:  0.36,
 		ImageKey:    "malachite.jpg",
@@ -91,7 +86,6 @@ var pigments = []Pigment{
 		Name:        "Лазурит",
 		Description: "Синий пигмент исключительной чистоты và яркости.",
 		Color:       "Синий",
-		Wavelength:  470,
 		Reflection:  0.62,
 		Absorption:  0.38,
 		ImageKey:    "lapis-lazuli.jpg",
@@ -104,7 +98,6 @@ var pigments = []Pigment{
 		Name:        "Ультрамарин",
 		Description: "Ярко-синий пигмент, исторически ценившийся на вес золота.",
 		Color:       "Синий",
-		Wavelength:  450,
 		Reflection:  0.60,
 		Absorption:  0.40,
 		ImageKey:    "ultramarine.jpg",
@@ -117,7 +110,6 @@ var pigments = []Pigment{
 		Name:        "Умбра",
 		Description: "Коричневый земляной пигмент из оксидов железа и марганца.",
 		Color:       "Коричневый",
-		Wavelength:  490,
 		Reflection:  0.58,
 		Absorption:  0.42,
 		ImageKey:    "umber.jpg",
@@ -130,7 +122,6 @@ var pigments = []Pigment{
 		Name:        "Новый образец (Черновик)",
 		Description: "Данные для нового исследования фрагмента живописи.",
 		Color:       "Не определен",
-		Wavelength:  0,
 		Reflection:  0.0,
 		Absorption:  0.0,
 		ImageKey:    "draft.jpg",
@@ -141,16 +132,11 @@ var pigments = []Pigment{
 }
 
 func main() {
-	templatesDir, assetsDir := resolveDataDirs()
-
-	tmpl := template.Must(template.ParseGlob(filepath.Join(templatesDir, "*.html")))
+	tmpl := template.Must(template.ParseGlob(filepath.Join("./templates", "*.html")))
 
 	mux := http.NewServeMux()
+	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./templates/assets"))))
 
-	// Serve assets
-	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir(assetsDir))))
-
-	// Root redirect
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
@@ -159,7 +145,6 @@ func main() {
 		http.Redirect(w, r, "/reconstruction-pigments", http.StatusFound)
 	})
 
-	// GET 1: Feed by ID (Reconstruction Analysis)
 	mux.HandleFunc("/reconstruction-pigments", func(w http.ResponseWriter, r *http.Request) {
 		pigment, ok := findPigment(r)
 		if !ok {
@@ -179,7 +164,6 @@ func main() {
 		}
 	})
 
-	// GET 2: Draft (Analysis Request / Заявка)
 	mux.HandleFunc("/pigment-analysis-request", func(w http.ResponseWriter, r *http.Request) {
 		var draft Pigment
 		for _, p := range pigments {
@@ -197,34 +181,18 @@ func main() {
 		}
 	})
 
-	// GET 3: All Cards (Pigments Database / База данных)
 	mux.HandleFunc("/pigments-database", func(w http.ResponseWriter, r *http.Request) {
 		filterStr := r.URL.Query().Get("filter")
 		filtered := filterPigments(filterStr)
 
-		// Собираем список уникальных длин волн для фильтра
-		wavelengths := make(map[int]bool)
-		for _, p := range pigments {
-			if p.Status == "опубликован" {
-				wavelengths[p.Wavelength] = true
-			}
-		}
-		var waveList []int
-		for w := range wavelengths {
-			waveList = append(waveList, w)
-		}
-		sort.Ints(waveList)
-
 		data := struct {
-			Pigments    []Pigment
-			Filter      string
-			Active      string
-			Wavelengths []int
+			Pigments []Pigment
+			Filter   string
+			Active   string
 		}{
-			Pigments:    filtered,
-			Filter:      filterStr,
-			Active:      "tiles",
-			Wavelengths: waveList,
+			Pigments: filtered,
+			Filter:   filterStr,
+			Active:   "tiles",
 		}
 		if err := tmpl.ExecuteTemplate(w, "pigments-database.html", data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -237,19 +205,12 @@ func main() {
 	}
 }
 
-func render(w http.ResponseWriter, tmpl *template.Template, name string, data interface{}) {
-	if err := tmpl.ExecuteTemplate(w, name, data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
 func findPigment(r *http.Request) (Pigment, bool) {
 	idRaw := r.URL.Query().Get("id")
 	if idRaw == "" {
 		return Pigment{}, false
 	}
 	id, _ := strconv.Atoi(idRaw)
-
 	next := r.URL.Query().Get("next") == "true"
 
 	var published []Pigment
@@ -272,34 +233,30 @@ func findPigment(r *http.Request) (Pigment, bool) {
 
 func filterPigments(filter string) []Pigment {
 	var out []Pigment
-	for _, p := range pigments {
-		if p.Status != "опубликован" {
-			continue
+	if filter == "" {
+		for _, p := range pigments {
+			if p.Status == "опубликован" {
+				out = append(out, p)
+			}
 		}
-		if filter == "" {
-			out = append(out, p)
-			continue
-		}
-
-		// Filter by Wavelength (numeric field as per requirement)
-		fVal, err := strconv.Atoi(filter)
-		if err == nil && p.Wavelength == fVal {
-			out = append(out, p)
-		}
+		sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+		return out
 	}
 
+	fVal, err := strconv.ParseFloat(filter, 64)
+	if err != nil {
+		for _, p := range pigments {
+			if p.Status == "опубликован" {
+				out = append(out, p)
+			}
+		}
+	} else {
+		for _, p := range pigments {
+			if p.Status == "опубликован" && p.Absorption <= fVal {
+				out = append(out, p)
+			}
+		}
+	}
 	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
 	return out
-}
-
-func resolveDataDirs() (templatesDir, assetsDir string) {
-	templatesDir = "./templates"
-	assetsDir = "./templates/assets"
-
-	// Check if we are running from root or subdir
-	if _, err := os.Stat(templatesDir); os.IsNotExist(err) {
-		templatesDir = "./historypigments/templates"
-		assetsDir = "./historypigments/templates/assets"
-	}
-	return
 }

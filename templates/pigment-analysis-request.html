@@ -56,18 +56,13 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="wave">ПИКОВАЯ ДЛИНА ВОЛНЫ (НМ)</label>
-                    <input type="number" id="wave" name="wavelength" class="form-input" value="{{ .Pigment.Wavelength }}">
-                </div>
-
-                <div class="form-group">
                     <div style="display: flex; gap: 10px;">
                         <div style="flex: 1;">
-                            <label for="refl">ОТРАЖЕНИЕ</label>
+                            <label for="refl">ДЛИНА ВОЛНЫ ОТРАЖЕНИЯ</label>
                             <input type="text" id="refl" name="reflection" class="form-input" value="{{ .Pigment.Reflection }}">
                         </div>
                         <div style="flex: 1;">
-                            <label for="abs">ПОГЛОЩЕНИЕ</label>
+                            <label for="abs">ДЛИНА ПОГЛОЩЕНИЯ</label>
                             <input type="text" id="abs" name="absorption" class="form-input" value="{{ .Pigment.Absorption }}">
                         </div>
                     </div>

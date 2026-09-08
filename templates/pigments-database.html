@@ -14,16 +14,13 @@
             <h1 class="section-title">Каталог пигментов</h1>
 
             <div class="search-bar">
-                <form action="/pigments-database" method="get">
-                    <select name="filter" class="search-input">
-                        <option value="">Все длины волн</option>
-                        {{ $currentFilter := .Filter }}
-                        {{ range .Wavelengths }}
-                        <option value="{{ . }}" {{ if eq (printf "%d" .) $currentFilter }}selected{{ end }}>
-                            {{ . }} нм
-                        </option>
-                        {{ end }}
-                    </select>
+                <form action="/pigments-database" method="get" class="filter-form">
+                    <div class="filter-group">
+                        <label for="filter" class="filter-label">ПОГЛОЩЕНИЕ (до): <span id="rangeValue">{{ if .Filter }}{{ .Filter }}{{ else }}1.0{{ end }}</span></label>
+                        <input type="range" name="filter" id="filter" min="0" max="1" step="0.01"
+                               value="{{ if .Filter }}{{ .Filter }}{{ else }}1.0{{ end }}"
+                               class="filter-slider" oninput="document.getElementById('rangeValue').innerText = this.value">
+                    </div>
                     <button type="submit" class="search-btn">Найти</button>
                 </form>
             </div>
@@ -35,7 +32,7 @@
                     <div class="card-content">
                         <h3 class="card-title">{{ .Name }}</h3>
                         <div class="card-footer">
-                            <span>{{ .Wavelength }} нм</span>
+                            <span>R: {{ .Reflection }} / A: {{ .Absorption }}</span>
                             <span>❤ {{ .LikesCount }}</span>
                         </div>
                     </div>
