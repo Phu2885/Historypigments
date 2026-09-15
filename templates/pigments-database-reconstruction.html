@@ -11,12 +11,12 @@
 <body>
     <div class="app-container">
         <main class="feed-page">
-            {{ if .Pigment.VideoURL }}
+            {{ if .Pigment.GetVideo }}
             <video class="video-bg" autoplay muted loop playsinline>
-                <source src="{{ .Pigment.VideoURL }}" type="video/mp4">
+                <source src="{{ .Pigment.GetVideo }}" type="video/mp4">
             </video>
             {{ else }}
-            <img class="video-bg" src="{{ .Pigment.ImageURL }}" alt="{{ .Pigment.Name }}">
+            <img class="video-bg" src="{{ .Pigment.GetImage }}" alt="{{ .Pigment.Name }}">
             {{ end }}
 
             <div class="feed-layout">
@@ -25,7 +25,7 @@
                     <h1 class="pigment-title">{{ .Pigment.Name }}</h1>
                     <div class="description-container">
                         <input type="checkbox" id="desc-toggle" class="desc-checkbox">
-                        <p class="pigment-desc">{{ .Pigment.Description }}</p>
+                        <p class="pigment-desc">{{ .Pigment.ShortDescription }}</p>
                         <label for="desc-toggle" class="desc-label" data-more="БОЛЬШЕ" data-less="МЕНЬШЕ"></label>
                     </div>
                 </div>
@@ -34,7 +34,7 @@
                 <div class="feed-params-side">
                     <div class="param-item">
                         <span class="action-icon">❤</span>
-                        <span class="param-value">{{ .Pigment.LikesCount }}</span>
+                        <span class="param-value">{{ .Likes }}</span>
                     </div>
 
                     <div class="param-group">
@@ -43,12 +43,12 @@
                     </div>
 
                     <div class="param-group">
-                        <span class="param-label">ОТРАЖЕНИЕ</span>
+                        <span class="param-label">ДЛИНА ОТРАЖ.</span>
                         <span class="param-value">{{ .Pigment.Reflection }}</span>
                     </div>
 
                     <div class="param-group">
-                        <span class="param-label">ПОГЛОЩЕНИЕ</span>
+                        <span class="param-label">ДЛИНА ПОГЛ.</span>
                         <span class="param-value">{{ .Pigment.Absorption }}</span>
                     </div>
 
