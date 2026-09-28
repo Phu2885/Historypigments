@@ -11,12 +11,13 @@
 <body>
     <div class="app-container">
         <main class="feed-page">
-            {{ if .Pigment.GetVideo }}
-            <video class="video-bg" autoplay muted loop playsinline>
+            {{ if .Pigment.VideoURL }}
+            <video class="video-bg" autoplay muted loop playsinline poster="{{ .Pigment.GetImage }}">
                 <source src="{{ .Pigment.GetVideo }}" type="video/mp4">
+                <source src="/assets/videos/placeholder.mp4" type="video/mp4">
             </video>
             {{ else }}
-            <img class="video-bg" src="{{ .Pigment.GetImage }}" alt="{{ .Pigment.Name }}">
+            <img class="video-bg" src="{{ .Pigment.GetImage }}" alt="{{ .Pigment.Name }}" onerror="this.onerror=null; this.src='/assets/images/placeholder.svg';">
             {{ end }}
 
             <div class="feed-layout">
@@ -35,11 +36,6 @@
                     <div class="param-item">
                         <span class="action-icon">❤</span>
                         <span class="param-value">{{ .Likes }}</span>
-                    </div>
-
-                    <div class="param-group">
-                        <span class="param-label">ЦВЕТ</span>
-                        <span class="param-value">{{ .Pigment.Color }}</span>
                     </div>
 
                     <div class="param-group">

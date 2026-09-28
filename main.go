@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -39,6 +41,11 @@ func main() {
 
 	// Статика
 	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./templates/assets"))))
+
+	// Проксирование к MinIO (для одинакового Origin и предотвращения CORS блокировок в Chrome)
+	minioURL, _ := url.Parse("http://localhost:9000")
+	proxy := httputil.NewSingleHostReverseProxy(minioURL)
+	mux.Handle("/minio/", http.StripPrefix("/minio/", proxy))
 
 	// GET методы
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

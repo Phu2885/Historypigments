@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-const minioBase = "http://localhost:9000/historypigments/"
+const minioBase = "/minio/historypigments/"
 
 type Pigment struct {
 	ID               uint      `gorm:"primaryKey"`
@@ -24,21 +24,35 @@ type Pigment struct {
 }
 
 func (p Pigment) GetImage() string {
-	if strings.TrimSpace(p.ImageURL) == "" {
-		return "/assets/images/placeholder.jpg"
+	img := strings.TrimSpace(p.ImageURL)
+	if img == "" {
+		return "/assets/images/placeholder.svg"
 	}
-	if strings.HasPrefix(p.ImageURL, "http") {
-		return p.ImageURL
+	if strings.HasPrefix(img, "/assets/") || strings.HasPrefix(img, "/minio/") {
+		return img
 	}
-	return minioBase + p.ImageURL
+	if strings.HasPrefix(img, "http://localhost:9000/historypigments/") {
+		return strings.Replace(img, "http://localhost:9000/historypigments/", minioBase, 1)
+	}
+	if strings.HasPrefix(img, "http") {
+		return img
+	}
+	return minioBase + img
 }
 
 func (p Pigment) GetVideo() string {
-	if strings.TrimSpace(p.VideoURL) == "" {
+	vid := strings.TrimSpace(p.VideoURL)
+	if vid == "" {
 		return ""
 	}
-	if strings.HasPrefix(p.VideoURL, "http") {
-		return p.VideoURL
+	if strings.HasPrefix(vid, "/assets/") || strings.HasPrefix(vid, "/minio/") {
+		return vid
 	}
-	return minioBase + p.VideoURL
+	if strings.HasPrefix(vid, "http://localhost:9000/historypigments/") {
+		return strings.Replace(vid, "http://localhost:9000/historypigments/", minioBase, 1)
+	}
+	if strings.HasPrefix(vid, "http") {
+		return vid
+	}
+	return minioBase + vid
 }

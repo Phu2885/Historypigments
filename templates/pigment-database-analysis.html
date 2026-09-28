@@ -14,59 +14,123 @@
             <h1 class="section-title">Добавление пигмента</h1>
 
             {{ if not .Pigment }}
-            <!-- ШАГ 1: СОЗДАНИЕ (ввод имен файлов вручную, как в методичке) -->
+            <!-- ШАГ 1: СОЗДАНИЕ ДРАФТА (Выбор локального или MinIO файла без загрузки на сервер) -->
             <form action="/create-draft" method="POST" class="analysis-form">
+                <!-- МЕДИА ПРЕДПРОСМОТР (Друг под другом) -->
+                <div class="media-preview-vertical">
+                    <div class="media-preview-box">
+                        <span class="media-preview-label">Фото (Предпросмотр)</span>
+                        <img id="photoPreview" src="/assets/images/placeholder.svg" alt="Photo Preview">
+                    </div>
+                    <div class="media-preview-box">
+                        <span class="media-preview-label">Видео (Предпросмотр)</span>
+                        <video id="videoPreview" autoplay muted loop playsinline controls>
+                            <source id="videoSource" src="/assets/videos/placeholder.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label>Название образца</label>
+                    <label>НАЗВАНИЕ ОБРАЗЦА</label>
                     <input type="text" name="name" class="form-input" placeholder="Напр. Киноварь" required>
                 </div>
 
                 <div class="form-group">
-                    <label>ИМЯ ФАЙЛА ИЗОБРАЖЕНИЯ (в MinIO)</label>
-                    <input type="text" name="image_key" class="form-input" placeholder="cinnabar.jpg">
+                    <label>ВЫБОР ИЗОБРАЖЕНИЯ (Локально / MinIO)</label>
+                    <select name="image_key" id="imageSelect" class="form-input" onchange="updatePhotoPreview(this.value)">
+                        <option value="/assets/images/placeholder.svg" selected>Локально: По умолчанию (placeholder.svg)</option>
+                        <option value="cinnabar.jpg">MinIO: cinnabar.jpg</option>
+                        <option value="lapis-lazuli.jpg">MinIO: lapis-lazuli.jpg</option>
+                        <option value="malachite.jpg">MinIO: malachite.jpg</option>
+                        <option value="ultramarine.jpg">MinIO: ultramarine.jpg</option>
+                        <option value="umber.jpg">MinIO: umber.jpg</option>
+                        <option value="yellow-ochre.jpg">MinIO: yellow-ochre.jpg</option>
+                        <option value="/assets/images/cinnabar.svg">Локально: Киноварь (Cinnabar)</option>
+                        <option value="/assets/images/lapis.svg">Локально: Лазурит (Lapis)</option>
+                        <option value="/assets/images/malachite.svg">Локально: Малахит (Malachite)</option>
+                    </select>
                 </div>
 
                 <div class="form-group">
-                    <label>ИМЯ ФАЙЛА ВИДЕО (в MinIO)</label>
-                    <input type="text" name="video_key" class="form-input" placeholder="cinnabar.mp4">
+                    <label>ВЫБОР ВИДЕО (Локально / MinIO)</label>
+                    <select name="video_key" id="videoSelect" class="form-input" onchange="updateVideoPreview(this.value)">
+                        <option value="/assets/videos/placeholder.mp4" selected>Локально: По умолчанию (placeholder.mp4)</option>
+                        <option value="cinnabar.mp4">MinIO: cinnabar.mp4</option>
+                        <option value="lapis-lazuli.mp4">MinIO: lapis-lazuli.mp4</option>
+                        <option value="malachite.mp4">MinIO: malachite.mp4</option>
+                        <option value="ultramarine.mp4">MinIO: ultramarine.mp4</option>
+                        <option value="umber.mp4">MinIO: umber.mp4</option>
+                        <option value="yellow-ochre.mp4">MinIO: yellow-ochre.mp4</option>
+                    </select>
                 </div>
 
                 <button type="submit" class="search-btn">ДАЛЕЕ</button>
             </form>
+
+            <script>
+                function updatePhotoPreview(val) {
+                    var img = document.getElementById('photoPreview');
+                    if (val.startsWith('/assets/') || val.startsWith('/minio/')) {
+                        img.src = val;
+                    } else if (val) {
+                        img.src = '/minio/historypigments/' + val;
+                    } else {
+                        img.src = '/assets/images/placeholder.svg';
+                    }
+                }
+
+                function updateVideoPreview(val) {
+                    var video = document.getElementById('videoPreview');
+                    var source = document.getElementById('videoSource');
+                    if (val.startsWith('/assets/') || val.startsWith('/minio/')) {
+                        source.src = val;
+                    } else if (val) {
+                        source.src = '/minio/historypigments/' + val;
+                    } else {
+                        source.src = '/assets/videos/placeholder.mp4';
+                    }
+                    video.load();
+                }
+            </script>
+
             {{ else }}
             <!-- ШАГ 2: ПУБЛИКАЦИЯ -->
             <form action="/publish-pigment" method="POST" class="analysis-form">
                 <input type="hidden" name="id" value="{{ .Pigment.ID }}">
 
-                <div class="form-group">
-                    <label>Образец: <b>{{ .Pigment.Name }}</b></label>
-                </div>
-
-                <div class="form-group">
-                    <label>ПРЕДПРОСМОТР</label>
-                    <div class="media-preview">
-                        {{ if .Pigment.GetImage }}
-                        <img src="{{ .Pigment.GetImage }}" alt="Preview">
-                        {{ else }}
-                        <span>Файл должен быть заранее загружен в MinIO</span>
-                        {{ end }}
+                <!-- МЕДИА ПРЕДПРОСМОТР ВЫБРАННЫХ ФАЙЛОВ (Друг под другом) -->
+                <div class="media-preview-vertical">
+                    <div class="media-preview-box">
+                        <span class="media-preview-label">Выбранное Фото</span>
+                        <img src="{{ .Pigment.GetImage }}" alt="{{ .Pigment.Name }}" onerror="this.onerror=null; this.src='/assets/images/placeholder.svg';">
+                    </div>
+                    <div class="media-preview-box">
+                        <span class="media-preview-label">Выбранное Видео</span>
+                        <video autoplay muted loop playsinline controls>
+                            <source src="{{ .Pigment.GetVideo }}" type="video/mp4">
+                            <source src="/assets/videos/placeholder.mp4" type="video/mp4">
+                        </video>
                     </div>
                 </div>
 
                 <div class="form-group">
+                    <label>ОБРАЗЕЦ: <b style="color: var(--gold); font-size: 16px;">{{ .Pigment.Name }}</b></label>
+                </div>
+
+                <div class="form-group">
                     <label>КРАТКОЕ ОПИСАНИЕ</label>
-                    <textarea name="description" class="form-textarea" rows="4" placeholder="Введите информацию..." required>{{ .Pigment.ShortDescription }}</textarea>
+                    <textarea name="description" class="form-textarea" rows="4" placeholder="Введите экспертное описание пигмента..." required>{{ .Pigment.ShortDescription }}</textarea>
                 </div>
 
                 <div class="form-group">
                     <div style="display: flex; gap: 10px;">
                         <div style="flex: 1;">
                             <label>ДЛИНА ОТРАЖ. (R)</label>
-                            <input type="number" name="reflection" step="0.01" class="form-input" required>
+                            <input type="number" name="reflection" step="0.01" class="form-input" placeholder="0.75" required>
                         </div>
                         <div style="flex: 1;">
                             <label>ДЛИНА ПОГЛ. (A)</label>
-                            <input type="number" name="absorption" step="0.01" class="form-input" required>
+                            <input type="number" name="absorption" step="0.01" class="form-input" placeholder="0.25" required>
                         </div>
                     </div>
                 </div>

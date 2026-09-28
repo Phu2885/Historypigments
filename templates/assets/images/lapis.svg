@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+  <rect width="600" height="400" fill="#0d1b2a"/>
+  <circle cx="300" cy="180" r="90" fill="#1976d2" opacity="0.8"/>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#bbdefb" font-family="Georgia, serif" font-size="28">Ультрамарин (Lapis Lazuli)</text>
+  <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" fill="#90caf9" font-family="sans-serif" font-size="14">Синий пигмент</text>
+</svg>
