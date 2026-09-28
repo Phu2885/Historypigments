@@ -2,13 +2,11 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"path/filepath"
 
 	"github.com/joho/godotenv"
 	"github.com/minio/minio-go/v7"
@@ -33,8 +31,7 @@ func main() {
 		log.Fatal("failed to connect database:", err)
 	}
 
-	// 2. Инициализация Репозитория и Хендлера
-	tmpl := template.Must(template.ParseGlob(filepath.Join("./templates", "*.html")))
+	// 2. Инициализация Репозитория
 	repo := repository.New(db)
 
 	// Инициализация MinIO SDK клиента (ЛР3)
@@ -62,34 +59,20 @@ func main() {
 		log.Println("MinIO SDK initialization warning:", errMinio)
 	}
 
-	h := handler.New(repo, tmpl)
+	h := handler.New(repo)
 
 	// 3. Роутинг
 	mux := http.NewServeMux()
 
-	// Статика
+	// Статика и прокси к MinIO
 	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./templates/assets"))))
 
-	// Проксирование к MinIO (для одинакового Origin)
 	minioURL, _ := url.Parse("http://" + minioHost)
 	proxy := httputil.NewSingleHostReverseProxy(minioURL)
 	mux.Handle("/minio/", http.StripPrefix("/minio/", proxy))
 
-	// WEB GET методы (Шаблоны)
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/pigments-database-reconstruction", http.StatusFound)
-	})
-	mux.HandleFunc("/pigments-database-reconstruction", h.GetFeed)
-	mux.HandleFunc("/pigment-database-analysis", h.GetAnalysis)
-	mux.HandleFunc("/pigments-database", h.GetDatabase)
-
-	// WEB POST методы (Формы)
-	mux.HandleFunc("/create-draft", h.CreateDraft)
-	mux.HandleFunc("/publish-pigment", h.Publish)
-	mux.HandleFunc("/delete-pigment", h.Delete)
-
 	// ==========================================
-	// REST API ЭНДПОИНТЫ (ЛР3)
+	// REST API ЭНДПОИНТЫ (ЛР3 - Только JSON)
 	// ==========================================
 
 	// GET /api/pigments и POST /api/pigments
@@ -127,7 +110,7 @@ func main() {
 		}
 	})
 
-	fmt.Printf("Alchemy of Art History serving on http://localhost:8080\n")
+	fmt.Printf("Alchemy of Art History REST API serving on http://localhost:8080\n")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		panic(err)
 	}

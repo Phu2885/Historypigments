@@ -90,17 +90,10 @@ rip/
 
 | Method | Path | Handler | Description |
 |---|---|---|---|
-| `GET` | `/` | Redirect | Redirects to `/pigments-database-reconstruction` |
-| `GET` | `/pigments-database-reconstruction` | `h.GetFeed` | Renders Feed view for published pigments with video/image, description, likes count, and "NEXT" navigation (`?id=X&next=true`). |
-| `GET` | `/pigment-database-analysis` | `h.GetAnalysis` | Multi-step view: Step 1 (create draft if none exists), Step 2 (publish draft with description, reflection, absorption). |
-| `GET` | `/pigments-database` | `h.GetDatabase` | Grid/Tile view of published pigments with range slider filter by absorption (`?filter=0.5`). |
-| `POST` | `/create-draft` | `h.CreateDraft` | Creates a new draft pigment record (`status = "черновик"`). Currently hardcoded to `CreatorID = 1`. |
-| `POST` | `/publish-pigment` | `h.Publish` | Updates draft status to `"опубликован"`, sets description, reflection, absorption, and `formed_at` timestamp. |
-| `POST` | `/delete-pigment` | `h.Delete` | Performs **logical deletion** (`status = "удалён"`) via **Raw SQL UPDATE** (without ORM). |
 | `GET` | `/api/pigments` | `h.GetPigmentsAPI` | **[Lab 3]** REST API: Returns JSON list of all pigments with author info. |
 | `GET` | `/api/pigments/{id}` | `h.GetPigmentByIDAPI` | **[Lab 3]** REST API: Returns single pigment JSON using `FullPigmentSerializer` (nested author JSON). |
-| `POST` | `/api/pigments` | `h.AddPigmentAPI` | **[Lab 3]** REST API: Creates new pigment from JSON or multipart form + optional image upload to MinIO. |
-| `PUT` | `/api/pigments/{id}` | `h.ModifyPigmentAPI` | **[Lab 3]** REST API: Modifies existing pigment by ID + optional image upload to MinIO. |
+| `POST` | `/api/pigments` | `h.AddPigmentAPI` | **[Lab 3]** REST API: Creates new pigment from JSON or multipart form + optional image upload to MinIO SDK. |
+| `PUT` | `/api/pigments/{id}` | `h.ModifyPigmentAPI` | **[Lab 3]** REST API: Modifies existing pigment by ID + optional image upload to MinIO SDK. |
 | `DELETE` | `/api/pigments/{id}` | `h.DeletePigmentAPI` | **[Lab 3]** REST API: Hard deletes pigment by ID. |
 | `GET` | `/api/users/{id}/pigments` | `h.GetUserPigmentsAPI` | **[Lab 3]** REST API: Returns user details and an array of their created pigments (Nested Serialization). |
 

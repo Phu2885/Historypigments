@@ -13,8 +13,12 @@ type Handler struct {
 	Tmpl *template.Template
 }
 
-func New(repo *repository.Repository, tmpl *template.Template) *Handler {
-	return &Handler{Repo: repo, Tmpl: tmpl}
+func New(repo *repository.Repository, tmpl ...*template.Template) *Handler {
+	var t *template.Template
+	if len(tmpl) > 0 {
+		t = tmpl[0]
+	}
+	return &Handler{Repo: repo, Tmpl: t}
 }
 
 // 1. GET: Лента (Reconstruction)
