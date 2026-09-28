@@ -30,5 +30,16 @@ func main() {
 		log.Fatal("migration failed:", err)
 	}
 
+	// Добавление дефолтного пользователя-создателя
+	var defaultUser ds.User
+	if err := db.Where("id = ? OR login = ?", 1, "test").First(&defaultUser).Error; err == gorm.ErrRecordNotFound {
+		defaultUser = ds.User{
+			Name:     "Эксперт Искусствовед",
+			Login:    "test",
+			Password: "test123",
+		}
+		_ = db.Create(&defaultUser).Error
+	}
+
 	fmt.Println("Database migration completed successfully")
 }

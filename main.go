@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 
 	"github.com/joho/godotenv"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"rip/internal/app/handler"
@@ -22,7 +24,7 @@ func main() {
 		log.Println("No .env file found")
 	}
 
-	// 1. Подключение к БД
+	// 1. Подключение к БД PostgreSQL
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_USER"), os.Getenv("DB_PASS"), os.Getenv("DB_NAME"))
 
@@ -34,6 +36,32 @@ func main() {
 	// 2. Инициализация Репозитория и Хендлера
 	tmpl := template.Must(template.ParseGlob(filepath.Join("./templates", "*.html")))
 	repo := repository.New(db)
+
+	// Инициализация MinIO SDK клиента (ЛР3)
+	minioHost := os.Getenv("MINIO_ENDPOINT")
+	if minioHost == "" {
+		minioHost = "localhost:9000"
+	}
+	minioUser := os.Getenv("MINIO_ROOT_USER")
+	if minioUser == "" {
+		minioUser = "root"
+	}
+	minioPass := os.Getenv("MINIO_ROOT_PASSWORD")
+	if minioPass == "" {
+		minioPass = "rootpassword"
+	}
+
+	minioClient, errMinio := minio.New(minioHost, &minio.Options{
+		Creds:  credentials.NewStaticV4(minioUser, minioPass, ""),
+		Secure: false,
+	})
+	if errMinio == nil {
+		repo.SetMinio(minioClient, "historypigments")
+		log.Println("MinIO SDK Client initialized successfully")
+	} else {
+		log.Println("MinIO SDK initialization warning:", errMinio)
+	}
+
 	h := handler.New(repo, tmpl)
 
 	// 3. Роутинг
@@ -42,12 +70,12 @@ func main() {
 	// Статика
 	mux.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./templates/assets"))))
 
-	// Проксирование к MinIO (для одинакового Origin и предотвращения CORS блокировок в Chrome)
-	minioURL, _ := url.Parse("http://localhost:9000")
+	// Проксирование к MinIO (для одинакового Origin)
+	minioURL, _ := url.Parse("http://" + minioHost)
 	proxy := httputil.NewSingleHostReverseProxy(minioURL)
 	mux.Handle("/minio/", http.StripPrefix("/minio/", proxy))
 
-	// GET методы
+	// WEB GET методы (Шаблоны)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/pigments-database-reconstruction", http.StatusFound)
 	})
@@ -55,10 +83,49 @@ func main() {
 	mux.HandleFunc("/pigment-database-analysis", h.GetAnalysis)
 	mux.HandleFunc("/pigments-database", h.GetDatabase)
 
-	// POST методы
+	// WEB POST методы (Формы)
 	mux.HandleFunc("/create-draft", h.CreateDraft)
 	mux.HandleFunc("/publish-pigment", h.Publish)
 	mux.HandleFunc("/delete-pigment", h.Delete)
+
+	// ==========================================
+	// REST API ЭНДПОИНТЫ (ЛР3)
+	// ==========================================
+
+	// GET /api/pigments и POST /api/pigments
+	mux.HandleFunc("/api/pigments", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			h.GetPigmentsAPI(w, r)
+		case http.MethodPost:
+			h.AddPigmentAPI(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	// GET /api/pigments/{id}, PUT /api/pigments/{id}, DELETE /api/pigments/{id}
+	mux.HandleFunc("/api/pigments/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			h.GetPigmentByIDAPI(w, r)
+		case http.MethodPut, http.MethodPost:
+			h.ModifyPigmentAPI(w, r)
+		case http.MethodDelete:
+			h.DeletePigmentAPI(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	// GET /api/users/{id}/pigments (Вложенная сериализация)
+	mux.HandleFunc("/api/users/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			h.GetUserPigmentsAPI(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
 
 	fmt.Printf("Alchemy of Art History serving on http://localhost:8080\n")
 	if err := http.ListenAndServe(":8080", mux); err != nil {

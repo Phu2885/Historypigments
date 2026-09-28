@@ -8,19 +8,24 @@ import (
 const minioBase = "/minio/historypigments/"
 
 type Pigment struct {
-	ID               uint      `gorm:"primaryKey"`
-	Name             string    `gorm:"type:varchar(100);not null"`
-	ShortDescription string    `gorm:"type:text"`
-	Status           string    `gorm:"type:varchar(20);not null;default:'черновик'"` // черновик/опубликован/удалён
-	ImageURL         string    `gorm:"type:varchar(255)"`
-	VideoURL         string    `gorm:"type:varchar(255)"`
-	Color            string    `gorm:"type:varchar(50)"`
-	Reflection       float64   `gorm:"type:decimal(5,2)"`
-	Absorption       float64   `gorm:"type:decimal(5,2)"`
-	CreatedAt        time.Time `gorm:"not null"`
-	FormedAt         *time.Time
-	CreatorID        uint
-	Creator          User `gorm:"foreignKey:CreatorID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	ID               uint       `gorm:"primaryKey" json:"id"`
+	Name             string     `gorm:"type:varchar(100);not null" json:"name"`
+	ShortDescription string     `gorm:"type:text" json:"short_description"`
+	Status           string     `gorm:"type:varchar(20);not null;default:'черновик'" json:"status"` // черновик/опубликован/удалён
+	ImageURL         string     `gorm:"type:varchar(255)" json:"image_url"`
+	VideoURL         string     `gorm:"type:varchar(255)" json:"video_url"`
+	Color            string     `gorm:"type:varchar(50)" json:"color"`
+	Reflection       float64    `gorm:"type:decimal(5,2)" json:"reflection"`
+	Absorption       float64    `gorm:"type:decimal(5,2)" json:"absorption"`
+	CreatedAt        time.Time  `gorm:"not null" json:"created_at"`
+	FormedAt         *time.Time `json:"formed_at,omitempty"`
+	CreatorID        uint       `json:"creator_id"`
+	Creator          User       `gorm:"foreignKey:CreatorID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
+}
+
+type FullPigmentSerializer struct {
+	Pigment
+	Creator User `json:"creator"`
 }
 
 func (p Pigment) GetImage() string {

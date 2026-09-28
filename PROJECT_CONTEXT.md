@@ -4,6 +4,7 @@
 
 ## 1. Executive Summary & Goals
 * **Project Name**: `rip` (Alchemy of Art History — Historical Pigments Database / Анализ и реконструкция пигментов)
+* **Git Branch**: `SPA` (Active branch for Lab 3 REST API development)
 * **Objective**: A web application designed for art history expertise and conservation analysis. It manages a catalog of historical pigments, supports multi-step pigment analysis/drafting, media integration via MinIO, absorption filtering, feed-style reconstruction views, and user feedback (likes).
 * **Lab Context**: Developed as part of a Web Development / Database course laboratory work using Go, GORM, PostgreSQL, MinIO, and HTML templates.
 
@@ -96,6 +97,12 @@ rip/
 | `POST` | `/create-draft` | `h.CreateDraft` | Creates a new draft pigment record (`status = "черновик"`). Currently hardcoded to `CreatorID = 1`. |
 | `POST` | `/publish-pigment` | `h.Publish` | Updates draft status to `"опубликован"`, sets description, reflection, absorption, and `formed_at` timestamp. |
 | `POST` | `/delete-pigment` | `h.Delete` | Performs **logical deletion** (`status = "удалён"`) via **Raw SQL UPDATE** (without ORM). |
+| `GET` | `/api/pigments` | `h.GetPigmentsAPI` | **[Lab 3]** REST API: Returns JSON list of all pigments with author info. |
+| `GET` | `/api/pigments/{id}` | `h.GetPigmentByIDAPI` | **[Lab 3]** REST API: Returns single pigment JSON using `FullPigmentSerializer` (nested author JSON). |
+| `POST` | `/api/pigments` | `h.AddPigmentAPI` | **[Lab 3]** REST API: Creates new pigment from JSON or multipart form + optional image upload to MinIO. |
+| `PUT` | `/api/pigments/{id}` | `h.ModifyPigmentAPI` | **[Lab 3]** REST API: Modifies existing pigment by ID + optional image upload to MinIO. |
+| `DELETE` | `/api/pigments/{id}` | `h.DeletePigmentAPI` | **[Lab 3]** REST API: Hard deletes pigment by ID. |
+| `GET` | `/api/users/{id}/pigments` | `h.GetUserPigmentsAPI` | **[Lab 3]** REST API: Returns user details and an array of their created pigments (Nested Serialization). |
 
 ---
 
@@ -105,17 +112,22 @@ rip/
 2. **Hybrid DB Approach (GORM + Raw SQL)**:
    - GORM is used for model queries, filtering (`Where`), and updates (`Updates`).
    - Raw SQL query (`r.db.DB().Exec("UPDATE pigments SET status = $1 WHERE id = $2", "удалён", id)`) is intentionally used in `LogicalDelete` to satisfy specific lab requirements (logical delete without ORM).
-3. **MinIO Integration**:
-   - Bucket name: `historypigments`.
-   - File paths are stored as relative keys or full URLs in DB; `GetImage()`/`GetVideo()` dynamically appends `http://localhost:9000/historypigments/` if necessary.
+3. **MinIO Integration & SDK**:
+   - Integrated MinIO Go SDK (`github.com/minio/minio-go/v7`) in Repository (`AddOrReplacePigmentImage`).
+   - Same-origin reverse proxy `/minio/` in `main.go` for seamless CORS-free media delivery.
+4. **Lab 3 REST API & Nested Serialization**:
+   - Models annotated with `json:"..."` tags (`User`, `Pigment`, `UserPigments`, `FullPigmentSerializer`).
+   - Preloading relationships in GORM (`r.db.Preload("Creator")`).
 
 ---
 
 ## 7. Current Project Status & Completed Features
 
-- [x] Docker Compose setup for PostgreSQL, MinIO, Adminer.
-- [x] Database migration script (`cmd/migrate/main.go`).
-- [x] Web server initialization with dotenv and template parsing.
+- [x] **Lab 3 REST API Implementation**:
+  - Full REST API endpoints returning JSON (`/api/pigments`, `/api/pigments/{id}`, `/api/users/{id}/pigments`).
+  - MinIO SDK client initialization and file upload handler (`AddOrReplacePigmentImage`).
+  - Nested JSON serialization (`FullPigmentSerializer` and `UserPigments`).
+  - Seeding default user in `cmd/migrate/main.go`.
 - [x] **Feed View (Reconstruction)**:
   - Video/image media background rendering fixed (rendered conditionally via `{{ if .Pigment.VideoURL }}` so `<img>` element doesn't overlay and block MinIO video playback).
   - Collapsible short description with hidden checkbox and styled "БОЛЬШЕ" / "МЕНЬШЕ" toggle button (`.desc-label::after`).
