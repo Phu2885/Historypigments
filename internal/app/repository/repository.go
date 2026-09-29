@@ -125,7 +125,6 @@ func (r *Repository) ModifyPigment(id uint, p *ds.Pigment) error {
 	updateData := map[string]interface{}{
 		"name":              p.Name,
 		"short_description": p.ShortDescription,
-		"color":             p.Color,
 		"reflection":        p.Reflection,
 		"absorption":        p.Absorption,
 	}

@@ -14,7 +14,6 @@ type Pigment struct {
 	Status           string     `gorm:"type:varchar(20);not null;default:'черновик'" json:"status"` // черновик/опубликован/удалён
 	ImageURL         string     `gorm:"type:varchar(255)" json:"image_url"`
 	VideoURL         string     `gorm:"type:varchar(255)" json:"video_url"`
-	Color            string     `gorm:"type:varchar(50)" json:"color"`
 	Reflection       float64    `gorm:"type:decimal(5,2)" json:"reflection"`
 	Absorption       float64    `gorm:"type:decimal(5,2)" json:"absorption"`
 	CreatedAt        time.Time  `gorm:"not null" json:"created_at"`

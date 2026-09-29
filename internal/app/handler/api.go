@@ -126,7 +126,6 @@ func (h *Handler) AddPigmentAPI(w http.ResponseWriter, r *http.Request) {
 		if err := r.ParseMultipartForm(2 << 20); err == nil {
 			pigment.Name = r.FormValue("name")
 			pigment.ShortDescription = r.FormValue("short_description")
-			pigment.Color = r.FormValue("color")
 			pigment.Status = r.FormValue("status")
 			if pigment.Status == "" {
 				pigment.Status = "опубликован"
@@ -207,9 +206,6 @@ func (h *Handler) ModifyPigmentAPI(w http.ResponseWriter, r *http.Request) {
 			}
 			if r.FormValue("short_description") != "" {
 				existing.ShortDescription = r.FormValue("short_description")
-			}
-			if r.FormValue("color") != "" {
-				existing.Color = r.FormValue("color")
 			}
 			if r.FormValue("status") != "" {
 				existing.Status = r.FormValue("status")

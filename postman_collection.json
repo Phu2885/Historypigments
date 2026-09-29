@@ -62,7 +62,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"Азурит\",\n  \"short_description\": \"Лазурно-синий медный пигмент\",\n  \"color\": \"Синий\",\n  \"status\": \"опубликован\",\n  \"reflection\": 0.70,\n  \"absorption\": 0.30,\n  \"creator_id\": 1\n}"
+							"raw": "{\n  \"name\": \"Азурит\",\n  \"short_description\": \"Лазурно-синий медный пигмент\",\n  \"status\": \"опубликован\",\n  \"reflection\": 0.70,\n  \"absorption\": 0.30,\n  \"creator_id\": 1\n}"
 						},
 						"url": {
 							"raw": "http://localhost:8080/api/pigments",
@@ -151,11 +151,6 @@
 								{
 									"key": "short_description",
 									"value": "Красный железоокисный пигмент",
-									"type": "text"
-								},
-								{
-									"key": "color",
-									"value": "Красно-коричневый",
 									"type": "text"
 								},
 								{
