@@ -1,0 +1,5 @@
+2026/09/29 18:06:09 MinIO SDK Client initialized successfully
+Alchemy of Art History REST API serving on http://localhost:8080
+
+2026/09/29 18:06:25 [31;1m/Users/min/Desktop/rip/internal/app/repository/repository.go:88 [35;1mrecord not found
+[0m[33m[3.824ms] [34;1m[rows:0][0m SELECT * FROM "pigments" WHERE creator_id = 1 AND status = 'черновик' ORDER BY "pigments"."id" LIMIT 1

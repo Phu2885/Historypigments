@@ -20,6 +20,8 @@ type Pigment struct {
 	FormedAt         *time.Time `json:"formed_at,omitempty"`
 	CreatorID        uint       `json:"creator_id"`
 	Creator          User       `gorm:"foreignKey:CreatorID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
+	IsCreator        int        `gorm:"-" json:"is_creator"` // 0/1 признак совпадения создателя с текущим пользователем
+	LikesCount       int64      `gorm:"-" json:"likes_count,omitempty"`
 }
 
 type FullPigmentSerializer struct {

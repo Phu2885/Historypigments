@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"rip/internal/app/ds"
+	"rip/internal/app/repository"
 )
 
 // Helper: Отправка JSON ответа
@@ -26,59 +27,39 @@ func writeErrorJSON(w http.ResponseWriter, statusCode int, message string) {
 	})
 }
 
-// Helper: Валидация загружаемого файла-изображения
-func isImage(contentType string) bool {
-	imageTypes := []string{
-		"image/jpeg",
-		"image/jpg",
-		"image/png",
-		"image/gif",
-		"image/webp",
-		"image/svg+xml",
-	}
-	for _, t := range imageTypes {
-		if contentType == t {
-			return true
-		}
-	}
-	return false
-}
-
-func validateFileUpload(header *multipart.FileHeader) (int, error) {
-	file, err := header.Open()
-	if err != nil {
-		return http.StatusBadRequest, fmt.Errorf("не удалось открыть файл")
-	}
-	defer file.Close()
-
-	buffer := make([]byte, 512)
-	_, err = file.Read(buffer)
-	if err != nil {
-		return http.StatusInternalServerError, fmt.Errorf("не удалось прочитать файл")
-	}
-
-	contentType := http.DetectContentType(buffer)
-	if !isImage(contentType) && !strings.Contains(header.Filename, ".svg") {
-		return http.StatusBadRequest, fmt.Errorf("файл должен быть изображением")
-	}
-
-	return 0, nil
-}
-
-// Helper: Извлечение ID из URL path (например, /api/pigments/15 -> 15)
+// Helper: Извлечение ID из URL path (например, /api/pigments/15 или /api/users/1/pigments -> 15 / 1)
 func extractIDFromPath(path, prefix string) (uint, error) {
-	idStr := strings.TrimPrefix(path, prefix)
-	idStr = strings.Trim(idStr, "/")
-	id, err := strconv.Atoi(idStr)
+	trimmed := strings.TrimPrefix(path, prefix)
+	trimmed = strings.Trim(trimmed, "/")
+	parts := strings.Split(trimmed, "/")
+	if len(parts) == 0 || parts[0] == "" {
+		return 0, fmt.Errorf("invalid id")
+	}
+	id, err := strconv.Atoi(parts[0])
 	if err != nil || id <= 0 {
 		return 0, fmt.Errorf("invalid id")
 	}
 	return uint(id), nil
 }
 
-// 1. GET /api/pigments — получение списка всех пигментов
-func (h *Handler) GetPigmentsAPI(w http.ResponseWriter, r *http.Request) {
-	pigments, err := h.Repo.GetAllPigmentsAPI()
+// ==========================================
+// ДОМЕН УСЛУГИ (PIGMENTS)
+// ==========================================
+
+// 1. GET /api/pigments — Список с фильтрацией (только опубликованные) + признак is_creator (0/1)
+func (h *Handler) GetPigmentsListAPI(w http.ResponseWriter, r *http.Request) {
+	currentUserID := repository.GetCurrentUserID()
+	var absorptionFilter *float64
+
+	filterStr := r.URL.Query().Get("filter")
+	if filterStr != "" {
+		val, err := strconv.ParseFloat(filterStr, 64)
+		if err == nil {
+			absorptionFilter = &val
+		}
+	}
+
+	pigments, err := h.Repo.GetPublishedPigmentsList(absorptionFilter, currentUserID)
 	if err != nil {
 		writeErrorJSON(w, http.StatusInternalServerError, err.Error())
 		return
@@ -90,7 +71,185 @@ func (h *Handler) GetPigmentsAPI(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// 2. GET /api/pigments/{id} — получение пигмента по ID с вложенным автором
+// 2. GET /api/pigments/feed — Лента (только опубликованные)
+func (h *Handler) GetFeedAPI(w http.ResponseWriter, r *http.Request) {
+	pigments, err := h.Repo.GetFeedPigments()
+	if err != nil {
+		writeErrorJSON(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"status": "success",
+		"data":   pigments,
+	})
+}
+
+// 3. GET /api/pigments/draft — Получение черновика текущего пользователя (без указывания ID)
+func (h *Handler) GetDraftAPI(w http.ResponseWriter, r *http.Request) {
+	currentUserID := repository.GetCurrentUserID()
+	draft, err := h.Repo.GetUserDraft(currentUserID)
+	if err != nil {
+		writeErrorJSON(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"status": "success",
+		"data":   draft,
+	})
+}
+
+// 4. POST /api/pigments — Добавление черновика + загрузка файлов фото и видео в MinIO (латинские имена)
+func (h *Handler) CreateDraftAPI(w http.ResponseWriter, r *http.Request) {
+	currentUserID := repository.GetCurrentUserID()
+
+	var pigment ds.Pigment
+	var imageHeader, videoHeader *multipart.FileHeader
+
+	contentType := r.Header.Get("Content-Type")
+	if strings.Contains(contentType, "multipart/form-data") {
+		if err := r.ParseMultipartForm(10 << 20); err == nil {
+			pigment.Name = r.FormValue("name")
+			pigment.ShortDescription = r.FormValue("short_description")
+			if imgKey := r.FormValue("image_key"); imgKey != "" {
+				pigment.ImageURL = imgKey
+			}
+			if vidKey := r.FormValue("video_key"); vidKey != "" {
+				pigment.VideoURL = vidKey
+			}
+
+			_, headerImg, errImg := r.FormFile("image")
+			if errImg == nil {
+				imageHeader = headerImg
+			}
+			_, headerVid, errVid := r.FormFile("video")
+			if errVid == nil {
+				videoHeader = headerVid
+			}
+		}
+	} else {
+		_ = json.NewDecoder(r.Body).Decode(&pigment)
+	}
+
+	if strings.TrimSpace(pigment.Name) == "" {
+		writeErrorJSON(w, http.StatusBadRequest, "поле 'name' обязательно")
+		return
+	}
+
+	err := h.Repo.CreateDraftPigment(&pigment, currentUserID, imageHeader, videoHeader)
+	if err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]interface{}{
+		"status":  "success",
+		"data":    pigment,
+		"message": "черновик пигмента успешно создан",
+	})
+}
+
+// 5. PUT /api/pigments/:id/publish — Публикация черновика (смена статуса)
+func (h *Handler) PublishPigmentAPI(w http.ResponseWriter, r *http.Request) {
+	currentUserID := repository.GetCurrentUserID()
+	path := strings.TrimSuffix(r.URL.Path, "/publish")
+	id, err := extractIDFromPath(path, "/api/pigments/")
+	if err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, "некорректный ID пигмента")
+		return
+	}
+
+	var req struct {
+		ShortDescription string  `json:"short_description"`
+		Reflection       float64 `json:"reflection"`
+		Absorption       float64 `json:"absorption"`
+	}
+
+	if strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+		_ = json.NewDecoder(r.Body).Decode(&req)
+	} else {
+		req.ShortDescription = r.FormValue("short_description")
+		req.Reflection, _ = strconv.ParseFloat(r.FormValue("reflection"), 64)
+		req.Absorption, _ = strconv.ParseFloat(r.FormValue("absorption"), 64)
+	}
+
+	err = h.Repo.PublishDraftPigment(id, currentUserID, req.ShortDescription, req.Reflection, req.Absorption)
+	if err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	updated, _ := h.Repo.GetPigmentByID(id)
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"status":  "success",
+		"data":    updated,
+		"message": "пигмент успешно опубликован",
+	})
+}
+
+// 6. DELETE /api/pigments/:id — Soft Delete (только пигменты этого пользователя)
+func (h *Handler) DeletePigmentAPI(w http.ResponseWriter, r *http.Request) {
+	currentUserID := repository.GetCurrentUserID()
+	id, err := extractIDFromPath(r.URL.Path, "/api/pigments/")
+	if err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, "некорректный ID пигмента")
+		return
+	}
+
+	err = h.Repo.SoftDeletePigment(id, currentUserID)
+	if err != nil {
+		writeErrorJSON(w, http.StatusForbidden, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"status":  "success",
+		"message": "пигмент успешно переведен в статус 'удалён'",
+	})
+}
+
+// 7. POST /api/pigments/:id/like — Поставить (1) или отменить (0) лайк
+func (h *Handler) ToggleLikeAPI(w http.ResponseWriter, r *http.Request) {
+	currentUserID := repository.GetCurrentUserID()
+	path := strings.TrimSuffix(r.URL.Path, "/like")
+	id, err := extractIDFromPath(path, "/api/pigments/")
+	if err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, "некорректный ID пигмента")
+		return
+	}
+
+	value := 1
+	if valueStr := r.URL.Query().Get("value"); valueStr != "" {
+		value, _ = strconv.Atoi(valueStr)
+	} else {
+		var req struct {
+			Value int `json:"value"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err == nil {
+			value = req.Value
+		}
+	}
+
+	likesCount, err := h.Repo.ToggleLike(id, currentUserID, value)
+	if err != nil {
+		writeErrorJSON(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	actionMsg := "лайк поставлен"
+	if value == 0 {
+		actionMsg = "лайк отменен"
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"status":      "success",
+		"likes_count": likesCount,
+		"message":     actionMsg,
+	})
+}
+
+// GET /api/pigments/:id — Получение подробной информации о пигменте
 func (h *Handler) GetPigmentByIDAPI(w http.ResponseWriter, r *http.Request) {
 	id, err := extractIDFromPath(r.URL.Path, "/api/pigments/")
 	if err != nil {
@@ -115,179 +274,40 @@ func (h *Handler) GetPigmentByIDAPI(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// 3. POST /api/pigments — добавление пигмента
-func (h *Handler) AddPigmentAPI(w http.ResponseWriter, r *http.Request) {
-	var pigment ds.Pigment
-	var fileHeader *multipart.FileHeader
-	fileFound := false
+// ==========================================
+// ДОМЕН ПОЛЬЗОВАТЕЛЬ (USERS)
+// ==========================================
 
-	contentType := r.Header.Get("Content-Type")
-	if strings.Contains(contentType, "multipart/form-data") {
-		if err := r.ParseMultipartForm(2 << 20); err == nil {
-			pigment.Name = r.FormValue("name")
-			pigment.ShortDescription = r.FormValue("short_description")
-			pigment.Status = r.FormValue("status")
-			if pigment.Status == "" {
-				pigment.Status = "опубликован"
-			}
-			pigment.Reflection, _ = strconv.ParseFloat(r.FormValue("reflection"), 64)
-			pigment.Absorption, _ = strconv.ParseFloat(r.FormValue("absorption"), 64)
-
-			file, header, err := r.FormFile("pic")
-			if err == nil {
-				file.Close()
-				fileHeader = header
-				fileFound = true
-			}
-		}
-	} else if strings.Contains(contentType, "application/json") {
-		_ = json.NewDecoder(r.Body).Decode(&pigment)
-	} else {
-		pigment.Name = r.FormValue("name")
-		pigment.ShortDescription = r.FormValue("short_description")
-	}
-
-	if strings.TrimSpace(pigment.Name) == "" {
-		writeErrorJSON(w, http.StatusBadRequest, "поле 'name' обязательно")
-		return
-	}
-
-	if fileFound {
-		code, err := validateFileUpload(fileHeader)
-		if err != nil {
-			writeErrorJSON(w, code, err.Error())
-			return
-		}
-	}
-
-	err := h.Repo.AddPigment(&pigment)
-	if err != nil {
-		writeErrorJSON(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	if fileFound {
-		_ = h.Repo.AddOrReplacePigmentImage(pigment.ID, fileHeader)
-		updated, err := h.Repo.GetPigmentByID(pigment.ID)
-		if err == nil {
-			pigment = updated
-		}
-	}
+// 8. POST /api/users/register — Регистрация
+func (h *Handler) RegisterUserAPI(w http.ResponseWriter, r *http.Request) {
+	var user ds.User
+	_ = json.NewDecoder(r.Body).Decode(&user)
 
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
 		"status":  "success",
-		"data":    pigment,
-		"message": "пигмент успешно добавлен",
+		"message": "пользователь успешно зарегистрирован",
+		"user_id": 1,
 	})
 }
 
-// 4. PUT /api/pigments/{id} — обновление пигмента
-func (h *Handler) ModifyPigmentAPI(w http.ResponseWriter, r *http.Request) {
-	id, err := extractIDFromPath(r.URL.Path, "/api/pigments/")
-	if err != nil {
-		writeErrorJSON(w, http.StatusBadRequest, "некорректный ID пигмента")
-		return
-	}
-
-	existing, err := h.Repo.GetPigmentByID(id)
-	if err != nil {
-		writeErrorJSON(w, http.StatusNotFound, fmt.Sprintf("пигмент с id %d не найден", id))
-		return
-	}
-
-	var fileHeader *multipart.FileHeader
-	fileFound := false
-
-	contentType := r.Header.Get("Content-Type")
-	if strings.Contains(contentType, "multipart/form-data") {
-		if err := r.ParseMultipartForm(2 << 20); err == nil {
-			if r.FormValue("name") != "" {
-				existing.Name = r.FormValue("name")
-			}
-			if r.FormValue("short_description") != "" {
-				existing.ShortDescription = r.FormValue("short_description")
-			}
-			if r.FormValue("status") != "" {
-				existing.Status = r.FormValue("status")
-			}
-			if r.FormValue("reflection") != "" {
-				existing.Reflection, _ = strconv.ParseFloat(r.FormValue("reflection"), 64)
-			}
-			if r.FormValue("absorption") != "" {
-				existing.Absorption, _ = strconv.ParseFloat(r.FormValue("absorption"), 64)
-			}
-
-			file, header, err := r.FormFile("pic")
-			if err == nil {
-				file.Close()
-				fileHeader = header
-				fileFound = true
-			}
-		}
-	} else if strings.Contains(contentType, "application/json") {
-		var input ds.Pigment
-		_ = json.NewDecoder(r.Body).Decode(&input)
-		if input.Name != "" {
-			existing.Name = input.Name
-		}
-		if input.ShortDescription != "" {
-			existing.ShortDescription = input.ShortDescription
-		}
-		if input.Reflection != 0 {
-			existing.Reflection = input.Reflection
-		}
-		if input.Absorption != 0 {
-			existing.Absorption = input.Absorption
-		}
-	}
-
-	if fileFound {
-		code, err := validateFileUpload(fileHeader)
-		if err != nil {
-			writeErrorJSON(w, code, err.Error())
-			return
-		}
-	}
-
-	err = h.Repo.ModifyPigment(id, &existing)
-	if err != nil {
-		writeErrorJSON(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	if fileFound {
-		_ = h.Repo.AddOrReplacePigmentImage(id, fileHeader)
-	}
-
-	updated, _ := h.Repo.GetPigmentByID(id)
+// 9. POST /api/users/login — Аутентификация (заглушка для 4-й ЛР)
+func (h *Handler) LoginUserAPI(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"status":  "success",
-		"data":    updated,
-		"message": "запись успешно обновлена",
+		"message": "успешная аутентификация (заглушка для ЛР4)",
+		"token":   "mock-jwt-token-lab4",
 	})
 }
 
-// 5. DELETE /api/pigments/{id} — удаление пигмента
-func (h *Handler) DeletePigmentAPI(w http.ResponseWriter, r *http.Request) {
-	id, err := extractIDFromPath(r.URL.Path, "/api/pigments/")
-	if err != nil {
-		writeErrorJSON(w, http.StatusBadRequest, "некорректный ID пигмента")
-		return
-	}
-
-	err = h.Repo.HardDeletePigment(id)
-	if err != nil {
-		writeErrorJSON(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
+// 10. POST /api/users/logout — Деавторизация (заглушка для 4-й ЛР)
+func (h *Handler) LogoutUserAPI(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"status":  "success",
-		"message": "пигмент успешно удален",
+		"message": "успешный выход из системы (заглушка для ЛР4)",
 	})
 }
 
-// 6. GET /api/users/{id}/pigments — вложенная сериализация пользователя и его пигментов
+// GET /api/users/:id/pigments — Вложенная сериализация профиля пользователя и созданных им пигментов
 func (h *Handler) GetUserPigmentsAPI(w http.ResponseWriter, r *http.Request) {
 	id, err := extractIDFromPath(r.URL.Path, "/api/users/")
 	if err != nil {

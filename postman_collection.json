@@ -2,20 +2,20 @@
 	"info": {
 		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 		"name": "ЛР3 - Pigments Database REST API",
-		"description": "Коллекция запросов для сдачи Лабораторной работы №3 (REST API, MinIO SDK, Вложенная сериализация)",
+		"description": "Коллекция всех 10 доменных запросов для сдачи Лабораторной работы №3 по методичке лр3",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Часть 1. Базовый REST API",
+			"name": "ДОМЕН УСЛУГИ (Pigments)",
 			"item": [
 				{
-					"name": "1. GET /api/pigments — Получение списка всех объектов",
+					"name": "1. GET /api/pigments — Список с фильтрацией (опубликованные, is_creator 0/1)",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/api/pigments",
+							"raw": "http://localhost:8080/api/pigments?filter=0.5",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -24,18 +24,25 @@
 							"path": [
 								"api",
 								"pigments"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "0.5",
+									"description": "Фильтрация по поглощению <= 0.5"
+								}
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "2. GET /api/pigments/:id — Получение одного объекта по ID",
+					"name": "2. GET /api/pigments/feed — Лента (только опубликованные)",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/api/pigments/1",
+							"raw": "http://localhost:8080/api/pigments/feed",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -44,78 +51,19 @@
 							"path": [
 								"api",
 								"pigments",
-								"1"
+								"feed"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "3. POST /api/pigments — Создание нового объекта (в формате JSON)",
+					"name": "3. GET /api/pigments/draft — Получение черновика текущего пользователя",
 					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Азурит\",\n  \"short_description\": \"Лазурно-синий медный пигмент\",\n  \"image_url\": \"ultramarine.jpg\",\n  \"video_url\": \"ultramarine.mp4\",\n  \"status\": \"опубликован\",\n  \"reflection\": 0.70,\n  \"absorption\": 0.30,\n  \"creator_id\": 1\n}"
-						},
-						"url": {
-							"raw": "http://localhost:8080/api/pigments",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"pigments"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "4. PUT /api/pigments/:id — Изменение данных объекта по ID",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"Киноварь (Обновленный)\",\n  \"short_description\": \"Улучшенное описание образца\",\n  \"reflection\": 0.78,\n  \"absorption\": 0.22\n}"
-						},
-						"url": {
-							"raw": "http://localhost:8080/api/pigments/1",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"api",
-								"pigments",
-								"1"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "5. DELETE /api/pigments/:id — Удаление объекта по ID",
-					"request": {
-						"method": "DELETE",
+						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:8080/api/pigments/1",
+							"raw": "http://localhost:8080/api/pigments/draft",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -124,19 +72,14 @@
 							"path": [
 								"api",
 								"pigments",
-								"1"
+								"draft"
 							]
 						}
 					},
 					"response": []
-				}
-			]
-		},
-		{
-			"name": "Часть 2. Загрузка файла в MinIO SDK",
-			"item": [
+				},
 				{
-					"name": "6. POST /api/pigments (с формой multipart/form-data) — Загрузка файла pic напрямую в бакет MinIO через SDK",
+					"name": "4. POST /api/pigments — Создание черновика + файлов картинки и видео в MinIO (латинские имена)",
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -145,26 +88,21 @@
 							"formdata": [
 								{
 									"key": "name",
-									"value": "Гематит",
+									"value": "Азурит Медный",
 									"type": "text"
 								},
 								{
 									"key": "short_description",
-									"value": "Красный железоокисный пигмент",
+									"value": "Лазурно-синий пигмент",
 									"type": "text"
 								},
 								{
-									"key": "reflection",
-									"value": "0.55",
-									"type": "text"
+									"key": "image",
+									"type": "file",
+									"src": []
 								},
 								{
-									"key": "absorption",
-									"value": "0.45",
-									"type": "text"
-								},
-								{
-									"key": "pic",
+									"key": "video",
 									"type": "file",
 									"src": []
 								}
@@ -184,14 +122,176 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "5. PUT /api/pigments/:id/publish — Публикация черновика (смена статуса)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"short_description\": \"Экспертное краткое описание опубликованного пигмента\",\n  \"reflection\": 0.75,\n  \"absorption\": 0.25\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/pigments/3/publish",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"pigments",
+								"3",
+								"publish"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "6. DELETE /api/pigments/:id — Soft Delete (только услуги текущего пользователя)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/pigments/3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"pigments",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "7. POST /api/pigments/:id/like — Лайк от текущего пользователя (1 поставит, 0 отменит)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/pigments/3/like?value=1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"pigments",
+								"3",
+								"like"
+							],
+							"query": [
+								{
+									"key": "value",
+									"value": "1",
+									"description": "1 ставит лайк, 0 отменяет лайк"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
 		{
-			"name": "Часть 3. Вложенная сериализация",
+			"name": "ДОМЕН ПОЛЬЗОВАТЕЛЬ (Users)",
 			"item": [
 				{
-					"name": "7. GET /api/users/:id/pigments — Получение профиля пользователя и массива всех созданных им объектов (вложенный JSON)",
+					"name": "8. POST /api/users/register — Регистрация пользователя",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Новый Эксперт\",\n  \"login\": \"newuser\",\n  \"password\": \"pass123\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/users/register",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "9. POST /api/users/login — Аутентификация (заглушка для ЛР4)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"login\": \"test\",\n  \"password\": \"test123\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/users/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "10. POST /api/users/logout — Деавторизация (заглушка для ЛР4)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/users/logout",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"users",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "11. GET /api/users/:id/pigments — Вложенная сериализация профиля и созданных пигментов",
 					"request": {
 						"method": "GET",
 						"header": [],

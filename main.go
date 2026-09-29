@@ -7,6 +7,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/minio/minio-go/v7"
@@ -72,28 +73,61 @@ func main() {
 	mux.Handle("/minio/", http.StripPrefix("/minio/", proxy))
 
 	// ==========================================
-	// REST API ЭНДПОИНТЫ (ЛР3 - Только JSON)
+	// REST API РУТИНГ (10 Доменных Эндпоинтов ЛР3)
 	// ==========================================
 
-	// GET /api/pigments и POST /api/pigments
+	// /api/pigments
 	mux.HandleFunc("/api/pigments", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			h.GetPigmentsAPI(w, r)
+			h.GetPigmentsListAPI(w, r)
 		case http.MethodPost:
-			h.AddPigmentAPI(w, r)
+			h.CreateDraftAPI(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
 
-	// GET /api/pigments/{id}, PUT /api/pigments/{id}, DELETE /api/pigments/{id}
+	// /api/pigments/...
 	mux.HandleFunc("/api/pigments/", func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		if path == "/api/pigments/feed" {
+			if r.Method == http.MethodGet {
+				h.GetFeedAPI(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+		if path == "/api/pigments/draft" {
+			if r.Method == http.MethodGet {
+				h.GetDraftAPI(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+		if strings.HasSuffix(path, "/publish") {
+			if r.Method == http.MethodPut || r.Method == http.MethodPost {
+				h.PublishPigmentAPI(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+		if strings.HasSuffix(path, "/like") {
+			if r.Method == http.MethodPost || r.Method == http.MethodPut {
+				h.ToggleLikeAPI(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+
+		// /api/pigments/{id}
 		switch r.Method {
 		case http.MethodGet:
 			h.GetPigmentByIDAPI(w, r)
-		case http.MethodPut, http.MethodPost:
-			h.ModifyPigmentAPI(w, r)
 		case http.MethodDelete:
 			h.DeletePigmentAPI(w, r)
 		default:
@@ -101,13 +135,44 @@ func main() {
 		}
 	})
 
-	// GET /api/users/{id}/pigments (Вложенная сериализация)
+	// /api/users/...
 	mux.HandleFunc("/api/users/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			h.GetUserPigmentsAPI(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		path := r.URL.Path
+		if path == "/api/users/register" {
+			if r.Method == http.MethodPost {
+				h.RegisterUserAPI(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+			return
 		}
+		if path == "/api/users/login" {
+			if r.Method == http.MethodPost {
+				h.LoginUserAPI(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+		if path == "/api/users/logout" {
+			if r.Method == http.MethodPost {
+				h.LogoutUserAPI(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+
+		if strings.HasSuffix(path, "/pigments") {
+			if r.Method == http.MethodGet {
+				h.GetUserPigmentsAPI(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+
+		http.Error(w, "Not found", http.StatusNotFound)
 	})
 
 	fmt.Printf("Alchemy of Art History REST API serving on http://localhost:8080\n")
