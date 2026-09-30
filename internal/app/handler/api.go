@@ -235,7 +235,7 @@ func (h *Handler) ToggleLikeAPI(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	likesCount, err := h.Repo.ToggleLike(id, currentUserID, value)
+	likesCount, isLiked, err := h.Repo.ToggleLike(id, currentUserID, value)
 	if err != nil {
 		writeErrorJSON(w, http.StatusInternalServerError, err.Error())
 		return
@@ -247,9 +247,11 @@ func (h *Handler) ToggleLikeAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"status":      "success",
-		"likes_count": likesCount,
-		"message":     actionMsg,
+		"status":  "success",
+		"id":      id,
+		"likes":   likesCount,
+		"is_like": isLiked,
+		"message": actionMsg,
 	})
 }
 

@@ -1,19 +1,2 @@
-2026/09/29 18:06:09 MinIO SDK Client initialized successfully
+2026/09/30 14:57:57 MinIO SDK Client initialized successfully
 Alchemy of Art History REST API serving on http://localhost:8080
-
-2026/09/29 18:06:25 [31;1m/Users/min/Desktop/rip/internal/app/repository/repository.go:88 [35;1mrecord not found
-[0m[33m[3.824ms] [34;1m[rows:0][0m SELECT * FROM "pigments" WHERE creator_id = 1 AND status = 'черновик' ORDER BY "pigments"."id" LIMIT 1
-
-2026/09/29 18:18:11 [31;1m/Users/min/Desktop/rip/internal/app/repository/repository.go:88 [35;1mrecord not found
-[0m[33m[1.384ms] [34;1m[rows:0][0m SELECT * FROM "pigments" WHERE creator_id = 1 AND status = 'черновик' ORDER BY "pigments"."id" LIMIT 1
-
-2026/09/30 11:46:45 [31;1m/Users/min/Desktop/rip/internal/app/repository/repository.go:88 [35;1mrecord not found
-[0m[33m[6.141ms] [34;1m[rows:0][0m SELECT * FROM "pigments" WHERE creator_id = 1 AND status = 'черновик' ORDER BY "pigments"."id" LIMIT 1
-
-2026/09/30 11:47:59 [31;1m/Users/min/Desktop/rip/internal/app/repository/repository.go:88 [35;1mrecord not found
-[0m[33m[3.861ms] [34;1m[rows:0][0m SELECT * FROM "pigments" WHERE creator_id = 1 AND status = 'черновик' ORDER BY "pigments"."id" LIMIT 1
-
-2026/09/30 14:31:31 [31;1m/Users/min/Desktop/rip/internal/app/repository/repository.go:72 [35;1mfailed to connect to `user=myuser database=historypigments_db`:
-	[::1]:5432 (localhost): dial error: dial tcp [::1]:5432: connect: connection refused
-	127.0.0.1:5432 (localhost): dial error: dial tcp 127.0.0.1:5432: connect: connection refused
-[0m[33m[8.762ms] [34;1m[rows:0][0m SELECT * FROM "pigments" WHERE status = 'опубликован'

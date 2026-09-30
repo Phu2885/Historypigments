@@ -36,6 +36,13 @@ func (r *Repository) SetMinio(minioClient *minio.Client, bucket string) {
 	}
 }
 
+// Helper: Проверка, поставил ли пользователь лайк
+func (r *Repository) IsPigmentLikedByUser(pigmentID uint, userID uint) bool {
+	var count int64
+	r.db.Model(&ds.Like{}).Where("pigment_id = ? AND user_id = ?", pigmentID, userID).Count(&count)
+	return count > 0
+}
+
 // ==========================================
 // MЕТОДЫ ЛАБОРАТОРНОЙ РАБОТЫ №3 (ДОМЕН PIGMENTS & USERS)
 // ==========================================
@@ -60,7 +67,8 @@ func (r *Repository) GetPublishedPigmentsList(absorptionFilter *float64, current
 			pigments[i].IsCreator = 0
 		}
 		likes, _ := r.GetLikesCount(pigments[i].ID)
-		pigments[i].LikesCount = likes
+		pigments[i].Likes = likes
+		pigments[i].IsLike = r.IsPigmentLikedByUser(pigments[i].ID, currentUserID)
 	}
 
 	return pigments, nil
@@ -104,7 +112,8 @@ func (r *Repository) GetFeedItem(id uint, next bool) (*ds.Pigment, error) {
 	}
 
 	likes, _ := r.GetLikesCount(current.ID)
-	current.LikesCount = likes
+	current.Likes = likes
+	current.IsLike = r.IsPigmentLikedByUser(current.ID, GetCurrentUserID())
 	current.IsCreator = 0
 	if current.CreatorID == GetCurrentUserID() {
 		current.IsCreator = 1
@@ -257,7 +266,7 @@ func (r *Repository) SoftDeletePigment(id uint, currentUserID uint) error {
 }
 
 // 7. POST /api/pigments/:id/like — Лайк (0 отменяет, 1 ставит)
-func (r *Repository) ToggleLike(pigmentID uint, currentUserID uint, value int) (int64, error) {
+func (r *Repository) ToggleLike(pigmentID uint, currentUserID uint, value int) (int64, bool, error) {
 	if value == 1 {
 		var existing ds.Like
 		err := r.db.Where("user_id = ? AND pigment_id = ?", currentUserID, pigmentID).First(&existing).Error
@@ -268,13 +277,22 @@ func (r *Repository) ToggleLike(pigmentID uint, currentUserID uint, value int) (
 		r.db.Where("user_id = ? AND pigment_id = ?", currentUserID, pigmentID).Delete(&ds.Like{})
 	}
 
-	return r.GetLikesCount(pigmentID)
+	likesCount, err := r.GetLikesCount(pigmentID)
+	isLiked := r.IsPigmentLikedByUser(pigmentID, currentUserID)
+	return likesCount, isLiked, err
 }
 
 // GET /api/pigments/:id — получение пигмента по ID с авторам (Preload)
 func (r *Repository) GetPigmentByID(id uint) (ds.Pigment, error) {
 	var pigment ds.Pigment
 	err := r.db.Preload("Creator").Where("id = ? AND status != ?", id, "удалён").First(&pigment).Error
+	if err == nil {
+		pigment.Likes, _ = r.GetLikesCount(pigment.ID)
+		pigment.IsLike = r.IsPigmentLikedByUser(pigment.ID, GetCurrentUserID())
+		if pigment.CreatorID == GetCurrentUserID() {
+			pigment.IsCreator = 1
+		}
+	}
 	return pigment, err
 }
 
@@ -290,6 +308,15 @@ func (r *Repository) GetUserPigments(userID uint) (*ds.UserPigments, error) {
 	err = r.db.Where("creator_id = ? AND status != ?", userID, "удалён").Find(&userPigments.Pigments).Error
 	if err != nil {
 		return nil, err
+	}
+
+	for i := range userPigments.Pigments {
+		likes, _ := r.GetLikesCount(userPigments.Pigments[i].ID)
+		userPigments.Pigments[i].Likes = likes
+		userPigments.Pigments[i].IsLike = r.IsPigmentLikedByUser(userPigments.Pigments[i].ID, GetCurrentUserID())
+		if userPigments.Pigments[i].CreatorID == GetCurrentUserID() {
+			userPigments.Pigments[i].IsCreator = 1
+		}
 	}
 
 	return &userPigments, nil
