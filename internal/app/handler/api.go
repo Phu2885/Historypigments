@@ -71,17 +71,21 @@ func (h *Handler) GetPigmentsListAPI(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// 2. GET /api/pigments/feed — Лента (только опубликованные)
+// 2. GET /api/pigments/feed — Лента (возвращает 1 объект пигмента для рилс/ленты)
 func (h *Handler) GetFeedAPI(w http.ResponseWriter, r *http.Request) {
-	pigments, err := h.Repo.GetFeedPigments()
-	if err != nil {
-		writeErrorJSON(w, http.StatusInternalServerError, err.Error())
+	idRaw := r.URL.Query().Get("id")
+	next := r.URL.Query().Get("next") == "true"
+	id, _ := strconv.Atoi(idRaw)
+
+	pigment, err := h.Repo.GetFeedItem(uint(id), next)
+	if err != nil || pigment == nil {
+		writeErrorJSON(w, http.StatusNotFound, "нет опубликованных пигментов в ленте")
 		return
 	}
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"status": "success",
-		"data":   pigments,
+		"data":   pigment,
 	})
 }
 

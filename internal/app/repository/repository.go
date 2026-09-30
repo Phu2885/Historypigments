@@ -66,20 +66,51 @@ func (r *Repository) GetPublishedPigmentsList(absorptionFilter *float64, current
 	return pigments, nil
 }
 
-// 2. GET /api/pigments/feed — Лента только опубликованных пигментов
-func (r *Repository) GetFeedPigments() ([]ds.Pigment, error) {
-	var pigments []ds.Pigment
-	err := r.db.Where("status = ?", "опубликован").Find(&pigments).Error
-	if err != nil {
+// 2. GET /api/pigments/feed — Лента (возвращает 1 опубликованный пигмент)
+func (r *Repository) GetFeedItem(id uint, next bool) (*ds.Pigment, error) {
+	var published []ds.Pigment
+	err := r.db.Where("status = ?", "опубликован").Order("id asc").Find(&published).Error
+	if err != nil || len(published) == 0 {
 		return nil, err
 	}
 
-	for i := range pigments {
-		likes, _ := r.GetLikesCount(pigments[i].ID)
-		pigments[i].LikesCount = likes
+	var current ds.Pigment
+	if next && id > 0 {
+		found := false
+		for _, p := range published {
+			if p.ID > id {
+				current = p
+				found = true
+				break
+			}
+		}
+		if !found {
+			current = published[0]
+		}
+	} else if id > 0 {
+		found := false
+		for _, p := range published {
+			if p.ID == id {
+				current = p
+				found = true
+				break
+			}
+		}
+		if !found {
+			current = published[0]
+		}
+	} else {
+		current = published[0]
 	}
 
-	return pigments, nil
+	likes, _ := r.GetLikesCount(current.ID)
+	current.LikesCount = likes
+	current.IsCreator = 0
+	if current.CreatorID == GetCurrentUserID() {
+		current.IsCreator = 1
+	}
+
+	return &current, nil
 }
 
 // 3. GET /api/pigments/draft — Получение черновика текущего пользователя (не более 1 записи)
