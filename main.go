@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"rip/internal/app/handler"
+	"rip/internal/app/redis"
 	"rip/internal/app/repository"
 )
 
@@ -22,6 +24,8 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found")
 	}
+
+	ctx := context.Background()
 
 	// 1. Подключение к БД PostgreSQL
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
@@ -60,7 +64,19 @@ func main() {
 		log.Println("MinIO SDK initialization warning:", errMinio)
 	}
 
-	h := handler.New(repo)
+	// Инициализация Redis клиента (ЛР4 Blacklist)
+	redisHost := os.Getenv("REDIS_HOST")
+	redisPort := os.Getenv("REDIS_PORT")
+	redisPass := os.Getenv("REDIS_PASSWORD")
+
+	redisClient, errRedis := redis.New(ctx, redisHost, redisPort, redisPass)
+	if errRedis == nil {
+		log.Println("Redis Client initialized successfully")
+	} else {
+		log.Println("Redis initialization warning:", errRedis)
+	}
+
+	h := handler.New(repo, redisClient)
 
 	// 3. Роутинг
 	mux := http.NewServeMux()
@@ -73,7 +89,7 @@ func main() {
 	mux.Handle("/minio/", http.StripPrefix("/minio/", proxy))
 
 	// ==========================================
-	// REST API РУТИНГ (10 Доменных Эндпоинтов ЛР3)
+	// REST API РУТИНГ (10 Доменных Эндпоинтов ЛР3/ЛР4)
 	// ==========================================
 
 	// /api/pigments
@@ -82,7 +98,8 @@ func main() {
 		case http.MethodGet:
 			h.GetPigmentsListAPI(w, r)
 		case http.MethodPost:
-			h.CreateDraftAPI(w, r)
+			// Создание черновика требует авторизации JWT
+			h.AuthMiddleware(redisClient, h.CreateDraftAPI)(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
@@ -109,7 +126,7 @@ func main() {
 		}
 		if strings.HasSuffix(path, "/publish") {
 			if r.Method == http.MethodPut || r.Method == http.MethodPost {
-				h.PublishPigmentAPI(w, r)
+				h.AuthMiddleware(redisClient, h.PublishPigmentAPI)(w, r)
 			} else {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
@@ -117,7 +134,7 @@ func main() {
 		}
 		if strings.HasSuffix(path, "/like") {
 			if r.Method == http.MethodPost || r.Method == http.MethodPut {
-				h.ToggleLikeAPI(w, r)
+				h.AuthMiddleware(redisClient, h.ToggleLikeAPI)(w, r)
 			} else {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
@@ -129,7 +146,7 @@ func main() {
 		case http.MethodGet:
 			h.GetPigmentByIDAPI(w, r)
 		case http.MethodDelete:
-			h.DeletePigmentAPI(w, r)
+			h.AuthMiddleware(redisClient, h.DeletePigmentAPI)(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
@@ -156,7 +173,7 @@ func main() {
 		}
 		if path == "/api/users/logout" {
 			if r.Method == http.MethodPost {
-				h.LogoutUserAPI(w, r)
+				h.AuthMiddleware(redisClient, h.LogoutUserAPI)(w, r)
 			} else {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}

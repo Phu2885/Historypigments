@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"rip/internal/app/ds"
 	"rip/internal/app/repository"
@@ -284,32 +285,94 @@ func (h *Handler) GetPigmentByIDAPI(w http.ResponseWriter, r *http.Request) {
 // ДОМЕН ПОЛЬЗОВАТЕЛЬ (USERS)
 // ==========================================
 
-// 8. POST /api/users/register — Регистрация
+// 8. POST /api/users/register — Регистрация пользователя
 func (h *Handler) RegisterUserAPI(w http.ResponseWriter, r *http.Request) {
 	var user ds.User
-	_ = json.NewDecoder(r.Body).Decode(&user)
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, "некорректный JSON запроса")
+		return
+	}
+
+	if strings.TrimSpace(user.Login) == "" || strings.TrimSpace(user.Password) == "" {
+		writeErrorJSON(w, http.StatusBadRequest, "поля 'login' и 'password' обязательны")
+		return
+	}
+	if user.Name == "" {
+		user.Name = user.Login
+	}
+
+	err := h.Repo.RegisterUser(&user)
+	if err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tokenStr, expiresIn, err := GenerateJWTToken(user.ID, user.Login, user.Role)
+	if err != nil {
+		writeErrorJSON(w, http.StatusInternalServerError, "ошибка генерации JWT токена")
+		return
+	}
 
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
-		"status":  "success",
-		"message": "пользователь успешно зарегистрирован",
-		"user_id": 1,
+		"status":       "success",
+		"message":      "пользователь успешно зарегистрирован",
+		"user_id":      user.ID,
+		"access_token": tokenStr,
+		"expires_in":   int(expiresIn.Seconds()),
+		"token_type":   "Bearer",
 	})
 }
 
-// 9. POST /api/users/login — Аутентификация (заглушка для 4-й ЛР)
+// 9. POST /api/users/login — Аутентификация (вход в систему)
 func (h *Handler) LoginUserAPI(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Login    string `json:"login"`
+		Password string `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeErrorJSON(w, http.StatusBadRequest, "некорректный JSON запроса")
+		return
+	}
+
+	user, err := h.Repo.GetUserByLogin(req.Login)
+	if err != nil || user.Password != req.Password {
+		writeErrorJSON(w, http.StatusUnauthorized, "неверный логин или пароль")
+		return
+	}
+
+	tokenStr, expiresIn, err := GenerateJWTToken(user.ID, user.Login, user.Role)
+	if err != nil {
+		writeErrorJSON(w, http.StatusInternalServerError, "ошибка генерации JWT токена")
+		return
+	}
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"status":  "success",
-		"message": "успешная аутентификация (заглушка для ЛР4)",
-		"token":   "mock-jwt-token-lab4",
+		"status":       "success",
+		"message":      "успешная аутентификация",
+		"access_token": tokenStr,
+		"expires_in":   int(expiresIn.Seconds()),
+		"token_type":   "Bearer",
 	})
 }
 
-// 10. POST /api/users/logout — Деавторизация (заглушка для 4-й ЛР)
+// 10. POST /api/users/logout — Деавторизация (добавление JWT токена в Redis Blacklist)
 func (h *Handler) LogoutUserAPI(w http.ResponseWriter, r *http.Request) {
+	authHeader := r.Header.Get("Authorization")
+	if !strings.HasPrefix(authHeader, jwtPrefix) {
+		writeErrorJSON(w, http.StatusBadRequest, "отсутствует заголовок 'Authorization: Bearer <token>'")
+		return
+	}
+
+	tokenStr := strings.TrimPrefix(authHeader, jwtPrefix)
+
+	if h.RedisClient != nil {
+		_ = h.RedisClient.WriteJWTToBlacklist(r.Context(), tokenStr, 24*time.Hour)
+	}
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"status":  "success",
-		"message": "успешный выход из системы (заглушка для ЛР4)",
+		"message": "вы успешно вышли из системы (токен внесен в blacklist в Redis)",
 	})
 }
 

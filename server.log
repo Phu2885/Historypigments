@@ -1,2 +1,8 @@
-2026/09/30 14:57:57 MinIO SDK Client initialized successfully
-Alchemy of Art History REST API serving on http://localhost:8080
+
+2026/10/09 03:25:19 [35m/Users/min/Desktop/rip/main.go:34
+[0m[31m[error] [0mfailed to initialize database, got error failed to connect to `user=myuser database=historypigments_db`:
+	[::1]:5432 (localhost): dial error: dial tcp [::1]:5432: connect: connection refused
+	127.0.0.1:5432 (localhost): dial error: dial tcp 127.0.0.1:5432: connect: connection refused
+2026/10/09 03:25:19 failed to connect database:failed to connect to `user=myuser database=historypigments_db`:
+	[::1]:5432 (localhost): dial error: dial tcp [::1]:5432: connect: connection refused
+	127.0.0.1:5432 (localhost): dial error: dial tcp 127.0.0.1:5432: connect: connection refused

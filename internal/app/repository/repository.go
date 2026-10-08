@@ -329,6 +329,28 @@ func (r *Repository) GetAllUsers() ([]ds.User, error) {
 	return users, err
 }
 
+// Регистрация нового пользователя
+func (r *Repository) RegisterUser(u *ds.User) error {
+	if u.Role == "" {
+		u.Role = "user"
+	}
+	var existing ds.User
+	if err := r.db.Where("login = ?", u.Login).First(&existing).Error; err == nil {
+		return fmt.Errorf("пользователь с логином '%s' уже существует", u.Login)
+	}
+	return r.db.Create(u).Error
+}
+
+// Поиск пользователя по логину
+func (r *Repository) GetUserByLogin(login string) (*ds.User, error) {
+	var user ds.User
+	err := r.db.Where("login = ?", login).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 // Получение количества лайков
 func (r *Repository) GetLikesCount(pigmentID uint) (int64, error) {
 	var count int64

@@ -4,7 +4,7 @@
 
 ## 1. Executive Summary & Goals
 * **Project Name**: `rip` (Alchemy of Art History — Historical Pigments Database / Анализ и реконструкция пигментов)
-* **Git Branch**: `SPA` (Active branch for Lab 3 REST API development)
+* **Git Branch**: `JWT` (Active branch for Lab 4 Authentication & Role Model)
 * **Objective**: A web application designed for art history expertise and conservation analysis. It manages a catalog of historical pigments, supports multi-step pigment analysis/drafting, media integration via MinIO, absorption filtering, feed-style reconstruction views, and user feedback (likes).
 * **Lab Context**: Developed as part of a Web Development / Database course laboratory work using Go, GORM, PostgreSQL, MinIO, and HTML templates.
 

@@ -30,6 +30,17 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  # Кэш и Blacklist токенов Redis (для 4-й лабы)
+  redis:
+    image: redis:6.2-alpine
+    container_name: historypigments_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --save 20 1 --loglevel warning --requirepass rootpassword
+    volumes:
+      - redis-data:/data
+
   # Интерфейс управления БД
   adminer:
     image: adminer:latest
@@ -42,3 +53,4 @@ services:
 volumes:
   minio-data:
   postgres_data:
+  redis-data:
