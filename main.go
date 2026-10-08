@@ -13,8 +13,10 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	_ "rip/docs"
 	"rip/internal/app/handler"
 	"rip/internal/app/redis"
 	"rip/internal/app/repository"
@@ -87,6 +89,9 @@ func main() {
 	minioURL, _ := url.Parse("http://" + minioHost)
 	proxy := httputil.NewSingleHostReverseProxy(minioURL)
 	mux.Handle("/minio/", http.StripPrefix("/minio/", proxy))
+
+	// Swagger UI Документация (ЛР4)
+	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
 	// ==========================================
 	// REST API РУТИНГ (10 Доменных Эндпоинтов ЛР3/ЛР4)
