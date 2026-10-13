@@ -17,6 +17,22 @@ const docTemplate = `{
             "post": {
                 "tags": ["Users / Auth"],
                 "summary": "Регистрация нового пользователя",
+                "consumes": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "name": { "type": "string", "example": "Эксперт Искусствовед" },
+                                "login": { "type": "string", "example": "expert" },
+                                "password": { "type": "string", "example": "pass123" }
+                            }
+                        }
+                    }
+                ],
                 "responses": {
                     "201": { "description": "Успешно зарегистрирован" }
                 }
@@ -27,6 +43,21 @@ const docTemplate = `{
                 "tags": ["Users / Auth"],
                 "summary": "Аутентификация пользователя (Вход)",
                 "description": "Возвращает JWT access_token при корректных учетных данных",
+                "consumes": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "login": { "type": "string", "example": "test" },
+                                "password": { "type": "string", "example": "test123" }
+                            }
+                        }
+                    }
+                ],
                 "responses": {
                     "200": { "description": "Успешная аутентификация" },
                     "401": { "description": "Неверный логин или пароль" }
