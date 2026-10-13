@@ -95,6 +95,23 @@ const docTemplate = `{
                 "tags": ["Pigments"],
                 "summary": "Создание черновика (Требуется JWT Авторизация)",
                 "security": [{ "BearerAuth": [] }],
+                "consumes": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "pigment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "name": { "type": "string", "example": "Азурит" },
+                                "short_description": { "type": "string", "example": "Лазурно-синий медный пигмент" },
+                                "image_key": { "type": "string", "example": "ultramarine.jpg" },
+                                "video_key": { "type": "string", "example": "ultramarine.mp4" }
+                            }
+                        }
+                    }
+                ],
                 "responses": {
                     "201": { "description": "Черновик создан" },
                     "401": { "description": "Требуется авторизация" }
@@ -139,7 +156,23 @@ const docTemplate = `{
                 "tags": ["Pigments"],
                 "summary": "Публикация черновика пигмента (Требуется JWT Авторизация)",
                 "security": [{ "BearerAuth": [] }],
-                "parameters": [{ "name": "id", "in": "path", "required": true, "type": "integer" }],
+                "consumes": ["application/json"],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true, "type": "integer" },
+                    {
+                        "name": "publish_data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "short_description": { "type": "string", "example": "Экспертное описание опубликованного пигмента" },
+                                "reflection": { "type": "number", "example": 0.75 },
+                                "absorption": { "type": "number", "example": 0.25 }
+                            }
+                        }
+                    }
+                ],
                 "responses": { "200": { "description": "Пигмент опубликован" } }
             }
         },
@@ -148,7 +181,10 @@ const docTemplate = `{
                 "tags": ["Pigments"],
                 "summary": "Лайк от текущего пользователя (Требуется JWT)",
                 "security": [{ "BearerAuth": [] }],
-                "parameters": [{ "name": "id", "in": "path", "required": true, "type": "integer" }],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true, "type": "integer" },
+                    { "name": "value", "in": "query", "type": "integer", "description": "1 - поставить лайк, 0 - отменить", "example": 1 }
+                ],
                 "responses": { "200": { "description": "Лайк обновлен" } }
             }
         },
