@@ -52,13 +52,24 @@ func GenerateJWTToken(userID uint, login, role string) (string, time.Duration, e
 // Auth Middleware: Проверка JWT токена и Redis Blacklist
 func (h *Handler) AuthMiddleware(redisClient *redis.Client, next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if !strings.HasPrefix(authHeader, jwtPrefix) {
+		authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
+		if authHeader == "" {
 			writeErrorJSON(w, http.StatusUnauthorized, "требуется авторизация (заголовок 'Authorization: Bearer <token>')")
 			return
 		}
 
-		tokenStr := strings.TrimPrefix(authHeader, jwtPrefix)
+		tokenStr := authHeader
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
+		} else if strings.HasPrefix(authHeader, "bearer ") {
+			tokenStr = strings.TrimPrefix(authHeader, "bearer ")
+		}
+		tokenStr = strings.TrimSpace(tokenStr)
+
+		if tokenStr == "" {
+			writeErrorJSON(w, http.StatusUnauthorized, "требуется авторизация (пустой токен)")
+			return
+		}
 
 		// Проверка токена в Blacklist Redis
 		if redisClient != nil && redisClient.CheckJWTInBlacklist(r.Context(), tokenStr) {

@@ -358,13 +358,14 @@ func (h *Handler) LoginUserAPI(w http.ResponseWriter, r *http.Request) {
 
 // 10. POST /api/users/logout — Деавторизация (добавление JWT токена в Redis Blacklist)
 func (h *Handler) LogoutUserAPI(w http.ResponseWriter, r *http.Request) {
-	authHeader := r.Header.Get("Authorization")
-	if !strings.HasPrefix(authHeader, jwtPrefix) {
-		writeErrorJSON(w, http.StatusBadRequest, "отсутствует заголовок 'Authorization: Bearer <token>'")
-		return
+	authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
+	tokenStr := authHeader
+	if strings.HasPrefix(authHeader, "Bearer ") {
+		tokenStr = strings.TrimPrefix(authHeader, "Bearer ")
+	} else if strings.HasPrefix(authHeader, "bearer ") {
+		tokenStr = strings.TrimPrefix(authHeader, "bearer ")
 	}
-
-	tokenStr := strings.TrimPrefix(authHeader, jwtPrefix)
+	tokenStr = strings.TrimSpace(tokenStr)
 
 	if h.RedisClient != nil {
 		_ = h.RedisClient.WriteJWTToBlacklist(r.Context(), tokenStr, 24*time.Hour)
