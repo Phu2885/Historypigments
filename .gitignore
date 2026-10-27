@@ -1,0 +1,11 @@
+# Binaries & logs
+rip
+server.log
+.DS_Store
+.idea/
+
+# Word documents, context, and methodology materials
+*.docx
+~$*.docx
+PROJECT_CONTEXT.md
+методика/
