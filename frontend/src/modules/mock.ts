@@ -1,0 +1,48 @@
+import type { Pigment } from "./pigmentsApi";
+
+export const PIGMENTS_MOCK: Pigment[] = [
+  {
+    id: 3,
+    name: "Малахит",
+    short_description: "Зелёный природный пигмент из размолотого минерала малахита.",
+    reflection: 0.64,
+    absorption: 0.36,
+    image_url: "/assets/images/malachite.svg",
+    video_url: "/assets/videos/placeholder.mp4",
+    likes: 5,
+    is_like: true,
+  },
+  {
+    id: 5,
+    name: "Ультрамарин",
+    short_description: "Ярко-синий исторический пигмент, получаемый из лазурита.",
+    reflection: 0.60,
+    absorption: 0.40,
+    image_url: "/assets/images/placeholder.svg",
+    video_url: "/assets/videos/placeholder.mp4",
+    likes: 8,
+    is_like: true,
+  },
+  {
+    id: 2,
+    name: "Жёлтая охра",
+    short_description: "Природный земляной пигмент, смесь гидратов оксида железа с глиной.",
+    reflection: 0.68,
+    absorption: 0.32,
+    image_url: "/assets/images/placeholder.svg",
+    video_url: "/assets/videos/placeholder.mp4",
+    likes: 3,
+    is_like: false,
+  },
+  {
+    id: 9,
+    name: "Киноварь",
+    short_description: "Ярко-красный ртутный пигмент, глубокий огненный тон.",
+    reflection: 0.78,
+    absorption: 0.22,
+    image_url: "/assets/images/cinnabar.svg",
+    video_url: "/assets/videos/placeholder.mp4",
+    likes: 12,
+    is_like: true,
+  },
+];
