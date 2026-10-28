@@ -8,6 +8,7 @@ interface Props {
   name: string;
   short_description?: string;
   image_url?: string;
+  reflection?: number;
   absorption?: number;
   likes?: number;
   onClick: () => void;
@@ -15,8 +16,8 @@ interface Props {
 
 export const PigmentCard: FC<Props> = ({
   name,
-  short_description,
   image_url,
+  reflection,
   absorption,
   likes = 0,
   onClick,
@@ -28,31 +29,24 @@ export const PigmentCard: FC<Props> = ({
     : defaultImage;
 
   return (
-    <Card className="pigmentCard" onClick={onClick}>
-      <div className="pigmentImgWrapper">
+    <Card className="card" onClick={onClick}>
+      <div className="cardImgWrapper">
         <Card.Img
-          className="pigmentCardImg"
+          className="card-img"
           variant="top"
           src={imgSrc}
           onError={(e) => {
             (e.target as HTMLImageElement).src = defaultImage;
           }}
         />
-        {absorption !== undefined && (
-          <span className="absorptionBadge">A ≤ {absorption}</span>
-        )}
       </div>
-      <Card.Body className="pigmentCardBody">
-        <Card.Title className="pigmentCardTitle">{name}</Card.Title>
-
-        <Card.Text className="pigmentCardDesc">
-          {short_description || "Исторический пигмент искусства"}
-        </Card.Text>
-
-        <div className="pigmentCardFooter">
-          <span className="pigmentLikes">❤️ {likes}</span>
+      <div className="card-content">
+        <Card.Title className="card-title">{name}</Card.Title>
+        <div className="card-footer">
+          <span>R: {reflection ?? 0.6} | A: {absorption ?? 0.4}</span>
+          <span>❤️ {likes}</span>
         </div>
-      </Card.Body>
+      </div>
     </Card>
   );
 };

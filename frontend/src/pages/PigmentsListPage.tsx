@@ -10,7 +10,7 @@ import type { AppOutletContext } from "../AppLayout";
 import { PIGMENTS_MOCK } from "../modules/mock";
 
 export const PigmentsListPage: FC = () => {
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState("1.0");
   const [loading, setLoading] = useState(false);
   const [pigments, setPigments] = useState<Pigment[]>(PIGMENTS_MOCK);
   const { setCards } = useOutletContext<AppOutletContext>();
@@ -52,26 +52,24 @@ export const PigmentsListPage: FC = () => {
   };
 
   return (
-    <div className="pigmentsListContainer">
-      <div className="headerSection">
-        <h2 className="appTitle">Alchemy of Art History</h2>
-        <p className="appSubtitle">Каталог исторических пигментов</p>
-        <InputField
-          value={searchValue}
-          setValue={(val) => setSearchValue(val)}
-          loading={loading}
-          onSubmit={handleSearch}
-        />
-      </div>
+    <div className="tiles-page">
+      <h2 className="section-title">Каталог пигментов</h2>
+
+      <InputField
+        value={searchValue}
+        setValue={(val) => setSearchValue(val)}
+        loading={loading}
+        onSubmit={handleSearch}
+      />
 
       {loading && (
         <div className="loadingBg">
-          <Spinner animation="border" variant="primary" />
+          <Spinner animation="border" style={{ color: "var(--gold)" }} />
         </div>
       )}
 
       {!loading && (
-        <div className="cardsList">
+        <div className="tiles-grid">
           {pigments.map((item) => (
             <PigmentCard
               key={item.id}

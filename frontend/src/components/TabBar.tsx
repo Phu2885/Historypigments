@@ -1,7 +1,7 @@
 import "./TabBar.css";
 import type { FC } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ROUTES, ROUTE_LABELS } from "../Routes";
+import { ROUTES } from "../Routes";
 import type { Pigment } from "../modules/pigmentsApi";
 
 interface Props {
@@ -27,22 +27,23 @@ export const TabBar: FC<Props> = ({ cards }) => {
   };
 
   return (
-    <nav className="tabBar">
+    <nav className="bottom-nav">
       <button
         type="button"
-        className={`tabBarItem ${isList ? "tabBarItemActive" : ""}`}
+        className={`nav-item ${isList ? "active" : ""}`}
         onClick={goToList}
       >
-        <span className="tabBarIcon">🎨</span>
-        {ROUTE_LABELS.LIST}
+        <span className="nav-icon">📊</span>
+        <span>Плитка</span>
       </button>
+
       <button
         type="button"
-        className={`tabBarItem ${isDetail ? "tabBarItemActive" : ""}`}
+        className={`nav-item ${isDetail ? "active" : ""}`}
         onClick={goToDetail}
       >
-        <span className="tabBarIcon">▶</span>
-        {ROUTE_LABELS.DETAIL}
+        <span className="nav-icon">🎥</span>
+        <span>Лента</span>
       </button>
     </nav>
   );

@@ -1,28 +1,22 @@
-.pigmentsListContainer {
-  padding: 16px;
+.tiles-page {
+  padding: 20px;
+  overflow-y: auto;
+  height: 100%;
 }
 
-.headerSection {
+.section-title {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  color: var(--gold);
   margin-bottom: 16px;
+  font-weight: 700;
 }
 
-.appTitle {
-  font-size: 20px;
-  font-weight: 800;
-  color: #fff;
-  margin: 0;
-}
-
-.appSubtitle {
-  font-size: 13px;
-  color: #a1a1aa;
-  margin: 2px 0 12px 0;
-}
-
-.cardsList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  padding-bottom: 40px;
 }
 
 .loadingBg {

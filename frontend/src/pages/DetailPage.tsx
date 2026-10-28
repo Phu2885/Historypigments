@@ -1,9 +1,8 @@
 import "./DetailPage.css";
 import { useEffect, useState, type FC } from "react";
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
-import { Button, Spinner } from "react-bootstrap";
+import { Spinner } from "react-bootstrap";
 import { getPigmentById, type Pigment } from "../modules/pigmentsApi";
-import { ROUTES } from "../Routes";
 import type { AppOutletContext } from "../AppLayout";
 import { PIGMENTS_MOCK } from "../modules/mock";
 
@@ -11,6 +10,7 @@ const defaultImage = "/assets/images/placeholder.svg";
 
 export const DetailPage: FC = () => {
   const [pageData, setPageData] = useState<Pigment>();
+  const [showMore, setShowMore] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
   const { cards } = useOutletContext<AppOutletContext>();
@@ -18,14 +18,12 @@ export const DetailPage: FC = () => {
   useEffect(() => {
     if (!id) return;
 
-    // Search in current cards list
     const fromList = cards.find((item) => String(item.id) === id);
     if (fromList) {
       setPageData(fromList);
       return;
     }
 
-    // Call API
     getPigmentById(id)
       .then((data) => {
         if (data) {
@@ -46,14 +44,14 @@ export const DetailPage: FC = () => {
     const currentIndex = cards.findIndex((item) => String(item.id) === id);
     const nextItem = cards[currentIndex + 1];
     if (nextItem) {
-      navigate(`${ROUTES.DETAIL}/${nextItem.id}`);
+      navigate(`/detail/${nextItem.id}`);
     }
   };
 
   if (!pageData) {
     return (
       <div className="detailLoader">
-        <Spinner animation="border" variant="primary" />
+        <Spinner animation="border" style={{ color: "var(--gold)" }} />
       </div>
     );
   }
@@ -71,10 +69,10 @@ export const DetailPage: FC = () => {
     : defaultImage;
 
   return (
-    <div className="detailPage">
+    <div className="feed-page">
       {mediaUrl ? (
         <video
-          className="detailMedia"
+          className="video-bg"
           src={mediaUrl}
           autoPlay
           loop
@@ -83,7 +81,7 @@ export const DetailPage: FC = () => {
         />
       ) : (
         <img
-          className="detailMedia"
+          className="video-bg"
           src={imageUrl}
           alt={pageData.name}
           onError={(e) => {
@@ -92,28 +90,51 @@ export const DetailPage: FC = () => {
         />
       )}
 
-      <div className="detailOverlay">
-        <h3 className="detailTitle">{pageData.name}</h3>
-        <p className="detailDesc">
-          {pageData.short_description || "Исторический пигмент искусства"}
-        </p>
+      <div className="feed-layout">
+        <div className="feed-description-side">
+          <h1 className="pigment-title">{pageData.name}</h1>
 
-        <div className="opticalBadges">
-          {pageData.reflection !== undefined && (
-            <span className="optBadge">Отражение R: {pageData.reflection}</span>
-          )}
-          {pageData.absorption !== undefined && (
-            <span className="optBadge">Поглощение A: {pageData.absorption}</span>
-          )}
+          <div className="description-container">
+            <p
+              className="pigment-desc"
+              style={{
+                display: showMore ? "block" : "-webkit-box",
+                WebkitLineClamp: showMore ? "unset" : 2,
+                WebkitBoxOrient: "vertical",
+                overflow: showMore ? "visible" : "hidden",
+              }}
+            >
+              {pageData.short_description || "Исторический пигмент искусства"}
+            </p>
+            <span
+              className="desc-label"
+              onClick={() => setShowMore(!showMore)}
+            >
+              {showMore ? "МЕНЬШЕ ▲" : "БОЛЬШЕ ▼"}
+            </span>
+          </div>
         </div>
 
-        <Button
-          className="detailNextBtn"
-          variant="primary"
-          onClick={handleNext}
-        >
-          Далее ▶
-        </Button>
+        <div className="feed-params-side">
+          <div className="param-group">
+            <span className="param-label">ОТРАЖЕНИЕ (R)</span>
+            <span className="param-value">{pageData.reflection ?? 0.60}</span>
+          </div>
+
+          <div className="param-group">
+            <span className="param-label">ПОГЛОЩЕНИЕ (A)</span>
+            <span className="param-value">{pageData.absorption ?? 0.40}</span>
+          </div>
+
+          <div className="action-icon">
+            ❤️ <div style={{ fontSize: "12px", fontWeight: 700 }}>{pageData.likes || 0}</div>
+          </div>
+
+          <button className="next-btn-vertical" onClick={handleNext}>
+            <span className="next-icon">▶</span>
+            <span className="next-text">ВПРЁД</span>
+          </button>
+        </div>
       </div>
     </div>
   );
