@@ -101,7 +101,8 @@ func main() {
 	mux.HandleFunc("/api/pigments", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			h.GetPigmentsListAPI(w, r)
+			// Гость или создатель (с токеном возвращается is_creator для кнопки удаления)
+			h.OptionalAuthMiddleware(redisClient, h.GetPigmentsListAPI)(w, r)
 		case http.MethodPost:
 			// Создание черновика требует авторизации JWT
 			h.AuthMiddleware(redisClient, h.CreateDraftAPI)(w, r)
@@ -115,7 +116,7 @@ func main() {
 		path := r.URL.Path
 		if path == "/api/pigments/feed" {
 			if r.Method == http.MethodGet {
-				h.GetFeedAPI(w, r)
+				h.OptionalAuthMiddleware(redisClient, h.GetFeedAPI)(w, r)
 			} else {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
@@ -123,7 +124,7 @@ func main() {
 		}
 		if path == "/api/pigments/draft" {
 			if r.Method == http.MethodGet {
-				h.GetDraftAPI(w, r)
+				h.AuthMiddleware(redisClient, h.GetDraftAPI)(w, r)
 			} else {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}

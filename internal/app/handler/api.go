@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"rip/internal/app/ds"
-	"rip/internal/app/repository"
 )
 
 // Helper: Отправка JSON ответа
@@ -49,7 +48,7 @@ func extractIDFromPath(path, prefix string) (uint, error) {
 
 // 1. GET /api/pigments — Список с фильтрацией (только опубликованные) + признак is_creator (0/1)
 func (h *Handler) GetPigmentsListAPI(w http.ResponseWriter, r *http.Request) {
-	currentUserID := repository.GetCurrentUserID()
+	currentUserID := GetUserIDFromContext(r)
 	var absorptionFilter *float64
 
 	filterStr := r.URL.Query().Get("filter")
@@ -78,7 +77,7 @@ func (h *Handler) GetFeedAPI(w http.ResponseWriter, r *http.Request) {
 	next := r.URL.Query().Get("next") == "true"
 	id, _ := strconv.Atoi(idRaw)
 
-	pigment, err := h.Repo.GetFeedItem(uint(id), next)
+	pigment, err := h.Repo.GetFeedItem(uint(id), next, GetUserIDFromContext(r))
 	if err != nil || pigment == nil {
 		writeErrorJSON(w, http.StatusNotFound, "нет опубликованных пигментов в ленте")
 		return
@@ -92,7 +91,7 @@ func (h *Handler) GetFeedAPI(w http.ResponseWriter, r *http.Request) {
 
 // 3. GET /api/pigments/draft — Получение черновика текущего пользователя (без указывания ID)
 func (h *Handler) GetDraftAPI(w http.ResponseWriter, r *http.Request) {
-	currentUserID := repository.GetCurrentUserID()
+	currentUserID := GetUserIDFromContext(r)
 	draft, err := h.Repo.GetUserDraft(currentUserID)
 	if err != nil {
 		writeErrorJSON(w, http.StatusInternalServerError, err.Error())
@@ -107,7 +106,7 @@ func (h *Handler) GetDraftAPI(w http.ResponseWriter, r *http.Request) {
 
 // 4. POST /api/pigments — Добавление черновика + загрузка файлов фото и видео в MinIO (латинские имена)
 func (h *Handler) CreateDraftAPI(w http.ResponseWriter, r *http.Request) {
-	currentUserID := repository.GetCurrentUserID()
+	currentUserID := GetUserIDFromContext(r)
 
 	var pigment ds.Pigment
 	var imageHeader, videoHeader *multipart.FileHeader
@@ -157,7 +156,7 @@ func (h *Handler) CreateDraftAPI(w http.ResponseWriter, r *http.Request) {
 
 // 5. PUT /api/pigments/:id/publish — Публикация черновика (смена статуса)
 func (h *Handler) PublishPigmentAPI(w http.ResponseWriter, r *http.Request) {
-	currentUserID := repository.GetCurrentUserID()
+	currentUserID := GetUserIDFromContext(r)
 	path := strings.TrimSuffix(r.URL.Path, "/publish")
 	id, err := extractIDFromPath(path, "/api/pigments/")
 	if err != nil {
@@ -195,7 +194,7 @@ func (h *Handler) PublishPigmentAPI(w http.ResponseWriter, r *http.Request) {
 
 // 6. DELETE /api/pigments/:id — Soft Delete (только пигменты этого пользователя)
 func (h *Handler) DeletePigmentAPI(w http.ResponseWriter, r *http.Request) {
-	currentUserID := repository.GetCurrentUserID()
+	currentUserID := GetUserIDFromContext(r)
 	id, err := extractIDFromPath(r.URL.Path, "/api/pigments/")
 	if err != nil {
 		writeErrorJSON(w, http.StatusBadRequest, "некорректный ID пигмента")
@@ -216,7 +215,7 @@ func (h *Handler) DeletePigmentAPI(w http.ResponseWriter, r *http.Request) {
 
 // 7. POST /api/pigments/:id/like — Поставить (1) или отменить (0) лайк
 func (h *Handler) ToggleLikeAPI(w http.ResponseWriter, r *http.Request) {
-	currentUserID := repository.GetCurrentUserID()
+	currentUserID := GetUserIDFromContext(r)
 	path := strings.TrimSuffix(r.URL.Path, "/like")
 	id, err := extractIDFromPath(path, "/api/pigments/")
 	if err != nil {

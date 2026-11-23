@@ -61,7 +61,7 @@ func (r *Repository) GetPublishedPigmentsList(absorptionFilter *float64, current
 	}
 
 	for i := range pigments {
-		if pigments[i].CreatorID == currentUserID {
+		if currentUserID != 0 && pigments[i].CreatorID == currentUserID {
 			pigments[i].IsCreator = 1
 		} else {
 			pigments[i].IsCreator = 0
@@ -75,7 +75,7 @@ func (r *Repository) GetPublishedPigmentsList(absorptionFilter *float64, current
 }
 
 // 2. GET /api/pigments/feed — Лента (возвращает 1 опубликованный пигмент)
-func (r *Repository) GetFeedItem(id uint, next bool) (*ds.Pigment, error) {
+func (r *Repository) GetFeedItem(id uint, next bool, currentUserID uint) (*ds.Pigment, error) {
 	var published []ds.Pigment
 	err := r.db.Where("status = ?", "опубликован").Order("id asc").Find(&published).Error
 	if err != nil || len(published) == 0 {
@@ -113,9 +113,9 @@ func (r *Repository) GetFeedItem(id uint, next bool) (*ds.Pigment, error) {
 
 	likes, _ := r.GetLikesCount(current.ID)
 	current.Likes = likes
-	current.IsLike = r.IsPigmentLikedByUser(current.ID, GetCurrentUserID())
+	current.IsLike = r.IsPigmentLikedByUser(current.ID, currentUserID)
 	current.IsCreator = 0
-	if current.CreatorID == GetCurrentUserID() {
+	if currentUserID != 0 && current.CreatorID == currentUserID {
 		current.IsCreator = 1
 	}
 
